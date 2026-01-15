@@ -2,7 +2,7 @@
 
 import logging
 import sys
-from typing import Any, cast
+from typing import cast
 
 import structlog
 
@@ -56,4 +56,4 @@ def get_logger(name: str | None = None) -> structlog.BoundLogger:
     Returns:
         Configured structlog logger
     """
-    return cast(structlog.BoundLogger, structlog.get_logger(name))
+    return cast("structlog.BoundLogger", structlog.get_logger(name))

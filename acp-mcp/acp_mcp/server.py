@@ -152,7 +152,7 @@ class MCPServerManager:
             "clientInfo": {"name": "acp", "version": "0.1.0"},
         }
         result = await self.send_request("initialize", params)
-        return cast(dict[str, Any], result)
+        return cast("dict[str, Any]", result)
 
     async def list_tools(self) -> list[MCPMethod]:
         """List available tools from the server."""
