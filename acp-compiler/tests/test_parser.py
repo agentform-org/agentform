@@ -99,6 +99,7 @@ workflows:
         assert spec.project.name == "full-project"
         assert "openai" in spec.providers.llm
         assert spec.providers.llm["openai"].api_key == "env:OPENAI_API_KEY"
+        assert spec.providers.llm["openai"].default_params is not None
         assert spec.providers.llm["openai"].default_params.temperature == 0.7
 
         assert len(spec.servers) == 1
@@ -111,6 +112,7 @@ workflows:
         assert spec.capabilities[1].requires_approval is True
 
         assert len(spec.policies) == 1
+        assert spec.policies[0].budgets is not None
         assert spec.policies[0].budgets.timeout_seconds == 60
 
         assert len(spec.agents) == 1

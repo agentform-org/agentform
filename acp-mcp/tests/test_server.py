@@ -206,7 +206,7 @@ class TestMCPServerManager:
     async def test_initialize(self):
         """Test initialize method."""
         server = MCPServerManager("test", ["echo"])
-        server.send_request = AsyncMock(return_value={"capabilities": {}})
+        server.send_request = AsyncMock(return_value={"capabilities": {}})  # type: ignore[method-assign]
 
         await server.initialize()
 
@@ -219,7 +219,7 @@ class TestMCPServerManager:
     async def test_list_tools(self):
         """Test list_tools method."""
         server = MCPServerManager("test", ["echo"])
-        server.send_request = AsyncMock(
+        server.send_request = AsyncMock(  # type: ignore[method-assign]
             return_value={
                 "tools": [
                     {"name": "readFile", "description": "Read a file"},
@@ -241,7 +241,7 @@ class TestMCPServerManager:
         """Test call_tool with simple text result."""
         server = MCPServerManager("test", ["echo"])
         server._tools = [MCPMethod(name="readFile")]
-        server.send_request = AsyncMock(
+        server.send_request = AsyncMock(  # type: ignore[method-assign]
             return_value={
                 "content": [{"type": "text", "text": "File content"}],
                 "isError": False,
@@ -260,7 +260,7 @@ class TestMCPServerManager:
         """Test call_tool with error result."""
         server = MCPServerManager("test", ["echo"])
         server._tools = [MCPMethod(name="readFile")]
-        server.send_request = AsyncMock(
+        server.send_request = AsyncMock(  # type: ignore[method-assign]
             return_value={
                 "content": [{"type": "text", "text": "File not found"}],
                 "isError": True,
@@ -276,7 +276,7 @@ class TestMCPServerManager:
         """Test call_tool with multiple content items."""
         server = MCPServerManager("test", ["echo"])
         server._tools = [MCPMethod(name="listFiles")]
-        server.send_request = AsyncMock(
+        server.send_request = AsyncMock(  # type: ignore[method-assign]
             return_value={
                 "content": [
                     {"type": "text", "text": "file1.txt"},
@@ -297,7 +297,7 @@ class TestMCPServerManager:
         """Test call_tool enhances error for unknown tool."""
         server = MCPServerManager("test", ["echo"])
         server._tools = [MCPMethod(name="existingTool")]
-        server.send_request = AsyncMock(side_effect=Exception("Unknown tool: missingTool"))
+        server.send_request = AsyncMock(side_effect=Exception("Unknown tool: missingTool"))  # type: ignore[method-assign]
 
         with pytest.raises(Exception) as exc_info:
             await server.call_tool("missingTool")
@@ -308,10 +308,10 @@ class TestMCPServerManager:
     async def test_context_manager(self):
         """Test server as async context manager."""
         server = MCPServerManager("test", ["echo"])
-        server.start = AsyncMock()
-        server.initialize = AsyncMock()
-        server.list_tools = AsyncMock(return_value=[])
-        server.stop = AsyncMock()
+        server.start = AsyncMock()  # type: ignore[method-assign]
+        server.initialize = AsyncMock()  # type: ignore[method-assign]
+        server.list_tools = AsyncMock(return_value=[])  # type: ignore[method-assign]
+        server.stop = AsyncMock()  # type: ignore[method-assign]
 
         async with server as ctx:
             assert ctx is server

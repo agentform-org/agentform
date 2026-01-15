@@ -218,39 +218,20 @@ class TestUnifiedCompileFile:
                 Path(f.name).unlink()
 
     def test_compiles_yaml_file(self) -> None:
-        """Test that .yaml files are compiled correctly."""
+        """Test that .yaml files are rejected."""
         content = """
 version: "0.1"
 project:
   name: yaml-test
-
-providers:
-  llm:
-    openai:
-      api_key: env:OPENAI_API_KEY
-
-agents:
-  - name: assistant
-    provider: openai
-    model:
-      preference: gpt-4o
-    instructions: test
-    allow: []
-
-workflows:
-  - name: ask
-    entry: end
-    steps:
-      - id: end
-        type: end
         """
         with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False, mode="w") as f:
             f.write(content)
             f.flush()
 
             try:
-                compiled = compile_file(f.name, check_env=False, resolve_credentials=False)
-                assert compiled.project_name == "yaml-test"
+                with pytest.raises(CompilationError) as exc_info:
+                    compile_file(f.name, check_env=False, resolve_credentials=False)
+                assert "Expected .acp file" in str(exc_info.value) or ".yaml" in str(exc_info.value)
             finally:
                 Path(f.name).unlink()
 
@@ -264,7 +245,7 @@ workflows:
                 with pytest.raises(CompilationError) as exc_info:
                     compile_file(f.name)
 
-                assert "Unknown file extension" in str(exc_info.value)
+                assert "Expected .acp file" in str(exc_info.value) or "Only .acp files" in str(exc_info.value)
             finally:
                 Path(f.name).unlink()
 
@@ -307,39 +288,20 @@ class TestUnifiedValidateFile:
                 Path(f.name).unlink()
 
     def test_validates_yaml_file(self) -> None:
-        """Test that .yaml files are validated correctly."""
+        """Test that .yaml files are rejected."""
         content = """
 version: "0.1"
 project:
   name: yaml-test
-
-providers:
-  llm:
-    openai:
-      api_key: env:OPENAI_API_KEY
-
-agents:
-  - name: assistant
-    provider: openai
-    model:
-      preference: gpt-4o
-    instructions: test
-    allow: []
-
-workflows:
-  - name: ask
-    entry: end
-    steps:
-      - id: end
-        type: end
         """
         with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False, mode="w") as f:
             f.write(content)
             f.flush()
 
             try:
-                result = validate_file(f.name, check_env=False)
-                assert result.is_valid
+                with pytest.raises(CompilationError) as exc_info:
+                    validate_file(f.name, check_env=False)
+                assert "Expected .acp file" in str(exc_info.value) or ".yaml" in str(exc_info.value)
             finally:
                 Path(f.name).unlink()
 

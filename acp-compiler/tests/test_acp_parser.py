@@ -497,6 +497,7 @@ class TestConditionalExpressions:
         result = parse_acp(content)
         model = result.models[0]
         params = model.get_params_block()
+        assert params is not None
         temp = params.get_attribute("temperature")
 
         assert isinstance(temp, ConditionalExpr)

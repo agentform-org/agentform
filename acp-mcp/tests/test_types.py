@@ -32,6 +32,7 @@ class TestMCPRequest:
             params={"name": "readFile", "arguments": {"path": "/tmp/test"}},
         )
         assert request.id == "req-123"
+        assert request.params is not None
         assert request.params["name"] == "readFile"
 
     def test_request_id_can_be_string(self):
@@ -57,6 +58,7 @@ class TestMCPError:
             message="Invalid params",
             data={"field": "path", "reason": "required"},
         )
+        assert error.data is not None
         assert error.data["field"] == "path"
 
 
@@ -75,6 +77,7 @@ class TestMCPResponse:
         """Test creating error response."""
         error = MCPError(code=-32600, message="Error")
         response = MCPResponse(id=1, error=error)
+        assert response.error is not None
         assert response.error.code == -32600
         assert response.result is None
 
@@ -110,6 +113,7 @@ class TestMCPMethod:
         )
         assert method.name == "writeFile"
         assert method.description == "Write content to a file"
+        assert method.inputSchema is not None
         assert method.inputSchema["type"] == "object"
         assert len(method.inputSchema["required"]) == 2
 

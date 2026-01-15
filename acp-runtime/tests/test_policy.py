@@ -232,7 +232,9 @@ class TestPolicyEnforcer:
 
         # Should not raise and should still record cost
         enforcer.check_cost("ctx-1", None, 100.00)
-        assert enforcer.get_context("ctx-1").total_cost_usd == 100.00
+        context = enforcer.get_context("ctx-1")
+        assert context is not None
+        assert context.total_cost_usd == 100.00
 
     def test_check_timeout_within_limit(self, policies):
         """Test check timeout passes within limit."""
@@ -280,9 +282,15 @@ class TestPolicyEnforcer:
         ctx1.capability_calls = 5
         ctx2.capability_calls = 8
 
-        assert enforcer.get_context("ctx-1").capability_calls == 5
-        assert enforcer.get_context("ctx-2").capability_calls == 8
+        context1 = enforcer.get_context("ctx-1")
+        context2 = enforcer.get_context("ctx-2")
+        assert context1 is not None
+        assert context2 is not None
+        assert context1.capability_calls == 5
+        assert context2.capability_calls == 8
 
         enforcer.end_context("ctx-1")
         assert enforcer.get_context("ctx-1") is None
-        assert enforcer.get_context("ctx-2").capability_calls == 8
+        context2_after = enforcer.get_context("ctx-2")
+        assert context2_after is not None
+        assert context2_after.capability_calls == 8

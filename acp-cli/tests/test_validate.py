@@ -15,14 +15,14 @@ class TestValidateCommand:
 
     def test_validate_nonexistent_file(self):
         """Test validating a file that doesn't exist."""
-        result = runner.invoke(app, ["validate", "nonexistent.yaml"])
+        result = runner.invoke(app, ["validate", "nonexistent.acp"])
         assert result.exit_code == 1
         assert "File not found" in result.stdout
 
     def test_validate_invalid_yaml(self):
-        """Test validating invalid YAML."""
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-            f.write("invalid: yaml: content: [")
+        """Test validating invalid ACP."""
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".acp", delete=False) as f:
+            f.write("invalid acp content [")
             temp_path = Path(f.name)
 
         try:
@@ -34,13 +34,14 @@ class TestValidateCommand:
 
     def test_validate_valid_minimal_spec(self):
         """Test validating a valid minimal spec."""
-        yaml_content = """
-version: "0.1"
-project:
-  name: test-project
+        acp_content = """
+acp {
+  version = "0.1"
+  project = "test-project"
+}
 """
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-            f.write(yaml_content)
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".acp", delete=False) as f:
+            f.write(acp_content)
             temp_path = Path(f.name)
 
         try:
@@ -52,13 +53,14 @@ project:
 
     def test_validate_with_check_env(self):
         """Test validate with environment check enabled."""
-        yaml_content = """
-version: "0.1"
-project:
-  name: test-project
+        acp_content = """
+acp {
+  version = "0.1"
+  project = "test-project"
+}
 """
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-            f.write(yaml_content)
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".acp", delete=False) as f:
+            f.write(acp_content)
             temp_path = Path(f.name)
 
         try:
@@ -70,13 +72,14 @@ project:
 
     def test_validate_no_check_env(self):
         """Test validate with environment check disabled."""
-        yaml_content = """
-version: "0.1"
-project:
-  name: test-project
+        acp_content = """
+acp {
+  version = "0.1"
+  project = "test-project"
+}
 """
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-            f.write(yaml_content)
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".acp", delete=False) as f:
+            f.write(acp_content)
             temp_path = Path(f.name)
 
         try:
@@ -90,45 +93,46 @@ project:
         """Test validating a full spec with providers."""
         monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
 
-        yaml_content = """
-version: "0.1"
-project:
-  name: full-test
+        acp_content = """
+acp {
+  version = "0.1"
+  project = "full-test"
+}
 
-providers:
-  llm:
-    openai:
-      api_key: env:OPENAI_API_KEY
+provider "llm.openai" "default" {
+  api_key = env("OPENAI_API_KEY")
+}
 
-policies:
-  - name: default
-    budgets:
-      timeout_seconds: 60
+policy "default" {
+  budgets { timeout_seconds = 60 }
+}
 
-agents:
-  - name: assistant
-    provider: openai
-    model:
-      preference: gpt-4o-mini
-    instructions: "You are helpful"
-    allow: []
-    policy: default
+model "gpt4o_mini" {
+  provider = provider.llm.openai.default
+  id = "gpt-4o-mini"
+}
 
-workflows:
-  - name: ask
-    entry: process
-    steps:
-      - id: process
-        type: llm
-        agent: assistant
-        input:
-          question: $input.question
-        next: end
-      - id: end
-        type: end
+agent "assistant" {
+  model = model.gpt4o_mini
+  instructions = "You are helpful"
+  policy = policy.default
+}
+
+workflow "ask" {
+  entry = step.process
+
+  step "process" {
+    type = "llm"
+    agent = agent.assistant
+    input { question = input.question }
+    next = step.end
+  }
+
+  step "end" { type = "end" }
+}
 """
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-            f.write(yaml_content)
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".acp", delete=False) as f:
+            f.write(acp_content)
             temp_path = Path(f.name)
 
         try:

@@ -214,26 +214,25 @@ class TestRunCommand:
 
     def test_run_nonexistent_spec_file(self):
         """Test running with a spec file that doesn't exist."""
-        result = runner.invoke(app, ["run", "test-workflow", "--spec", "nonexistent.yaml"])
+        result = runner.invoke(app, ["run", "test-workflow", "--spec", "nonexistent.acp"])
         assert result.exit_code == 1
         assert "Spec file not found" in result.stdout
 
     def test_run_with_invalid_input_json(self):
         """Test running with invalid JSON input."""
-        yaml_content = """
-version: "0.1"
-project:
-  name: test-project
+        acp_content = """
+acp {
+  version = "0.1"
+  project = "test-project"
+}
 
-workflows:
-  - name: test-workflow
-    entry: end
-    steps:
-      - id: end
-        type: end
+workflow "test-workflow" {
+  entry = step.end
+  step "end" { type = "end" }
+}
 """
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-            f.write(yaml_content)
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".acp", delete=False) as f:
+            f.write(acp_content)
             spec_path = Path(f.name)
 
         try:
@@ -248,22 +247,21 @@ workflows:
 
     def test_run_with_input_file(self):
         """Test running with input file."""
-        yaml_content = """
-version: "0.1"
-project:
-  name: test-project
+        acp_content = """
+acp {
+  version = "0.1"
+  project = "test-project"
+}
 
-workflows:
-  - name: test-workflow
-    entry: end
-    steps:
-      - id: end
-        type: end
+workflow "test-workflow" {
+  entry = step.end
+  step "end" { type = "end" }
+}
 """
         input_data = {"key": "value"}
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-            f.write(yaml_content)
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".acp", delete=False) as f:
+            f.write(acp_content)
             spec_path = Path(f.name)
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
@@ -292,20 +290,19 @@ workflows:
 
     def test_run_nonexistent_workflow(self):
         """Test running a workflow that doesn't exist."""
-        yaml_content = """
-version: "0.1"
-project:
-  name: test-project
+        acp_content = """
+acp {
+  version = "0.1"
+  project = "test-project"
+}
 
-workflows:
-  - name: existing-workflow
-    entry: end
-    steps:
-      - id: end
-        type: end
+workflow "existing-workflow" {
+  entry = step.end
+  step "end" { type = "end" }
+}
 """
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-            f.write(yaml_content)
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".acp", delete=False) as f:
+            f.write(acp_content)
             spec_path = Path(f.name)
 
         try:
@@ -323,20 +320,19 @@ workflows:
         """Test running and writing output to file."""
         mock_run.return_value = {"output": {"result": "success"}, "state": {}}
 
-        yaml_content = """
-version: "0.1"
-project:
-  name: test-project
+        acp_content = """
+acp {
+  version = "0.1"
+  project = "test-project"
+}
 
-workflows:
-  - name: test-workflow
-    entry: end
-    steps:
-      - id: end
-        type: end
+workflow "test-workflow" {
+  entry = step.end
+  step "end" { type = "end" }
+}
 """
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-            f.write(yaml_content)
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".acp", delete=False) as f:
+            f.write(acp_content)
             spec_path = Path(f.name)
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:

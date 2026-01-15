@@ -65,6 +65,7 @@ class TestResolvedServer:
         """Test server with auth token."""
         auth = ResolvedCredential(env_var="GITHUB_TOKEN", value="ghp_test")
         server = ResolvedServer(name="github", command=["gh"], auth_token=auth)
+        assert server.auth_token is not None
         assert server.auth_token.value == "ghp_test"
 
 
@@ -84,6 +85,7 @@ class TestMCPMethodSchema:
         )
         assert schema.name == "readFile"
         assert schema.description == "Read a file from disk"
+        assert schema.parameters is not None
         assert schema.parameters["required"] == ["path"]
 
     def test_minimal_method_schema(self):

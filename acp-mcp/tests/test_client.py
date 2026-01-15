@@ -169,8 +169,8 @@ class TestMCPClient:
     async def test_context_manager(self):
         """Test client as async context manager."""
         client = MCPClient()
-        client.start_all = AsyncMock()
-        client.stop_all = AsyncMock()
+        client.start_all = AsyncMock()  # type: ignore[method-assign]
+        client.stop_all = AsyncMock()  # type: ignore[method-assign]
 
         async with client as ctx:
             assert ctx is client
@@ -182,8 +182,8 @@ class TestMCPClient:
     async def test_context_manager_stops_on_exception(self):
         """Test that context manager stops servers on exception."""
         client = MCPClient()
-        client.start_all = AsyncMock()
-        client.stop_all = AsyncMock()
+        client.start_all = AsyncMock()  # type: ignore[method-assign]
+        client.stop_all = AsyncMock()  # type: ignore[method-assign]
 
         with pytest.raises(RuntimeError):
             async with client:
