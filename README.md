@@ -75,8 +75,14 @@ acp {
   project = "my-first-agent"
 }
 
+variable "openai_api_key" {
+  type        = string
+  description = "OpenAI API key"
+  sensitive   = true
+}
+
 provider "llm.openai" "default" {
-  api_key = env("OPENAI_API_KEY")
+  api_key = var.openai_api_key
   default_params {
     temperature = 0.7
     max_tokens  = 2000
