@@ -1,0 +1,162 @@
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write  # Required for trusted publishing (OIDC)
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: latest
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          # Remove 'v' prefix from tag if present (e.g., v0.1.0 -> 0.1.0)
+          VERSION=${GITHUB_REF_NAME#v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Publishing version: $VERSION"
+
+      - name: Update package versions
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          
+          # Update version in all pyproject.toml files
+          for pkg in acp-schema acp-mcp acp-compiler acp-runtime acp-cli; do
+            sed -i "s/^version = \".*\"/version = \"$VERSION\"/" $pkg/pyproject.toml
+            echo "Updated $pkg to version $VERSION"
+          done
+          
+          # Also update the dependency versions to match
+          for pkg in acp-mcp acp-compiler acp-runtime acp-cli; do
+            sed -i "s/acp-schema = \".*\"/acp-schema = \"^$VERSION\"/" $pkg/pyproject.toml
+            sed -i "s/acp-mcp = \".*\"/acp-mcp = \"^$VERSION\"/" $pkg/pyproject.toml
+            sed -i "s/acp-compiler = \".*\"/acp-compiler = \"^$VERSION\"/" $pkg/pyproject.toml
+            sed -i "s/acp-runtime = \".*\"/acp-runtime = \"^$VERSION\"/" $pkg/pyproject.toml
+          done
+
+      # Publish packages in dependency order
+      # 1. acp-schema (no internal dependencies)
+      - name: Build acp-schema
+        working-directory: acp-schema
+        run: poetry build
+
+      - name: Publish acp-schema to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: acp-schema/dist/
+
+      - name: Wait for acp-schema to be available
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          echo "Waiting for acp-schema $VERSION to be available on PyPI..."
+          for i in {1..30}; do
+            if pip index versions acp-schema 2>/dev/null | grep -q "$VERSION"; then
+              echo "acp-schema $VERSION is now available"
+              break
+            fi
+            echo "Attempt $i: Package not yet available, waiting 10 seconds..."
+            sleep 10
+          done
+
+      # 2. acp-mcp (depends on acp-schema)
+      - name: Build acp-mcp
+        working-directory: acp-mcp
+        run: poetry build
+
+      - name: Publish acp-mcp to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: acp-mcp/dist/
+
+      - name: Wait for acp-mcp to be available
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          echo "Waiting for acp-mcp $VERSION to be available on PyPI..."
+          for i in {1..30}; do
+            if pip index versions acp-mcp 2>/dev/null | grep -q "$VERSION"; then
+              echo "acp-mcp $VERSION is now available"
+              break
+            fi
+            echo "Attempt $i: Package not yet available, waiting 10 seconds..."
+            sleep 10
+          done
+
+      # 3. acp-compiler (depends on acp-schema, acp-mcp)
+      - name: Build acp-compiler
+        working-directory: acp-compiler
+        run: poetry build
+
+      - name: Publish acp-compiler to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: acp-compiler/dist/
+
+      - name: Wait for acp-compiler to be available
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          echo "Waiting for acp-compiler $VERSION to be available on PyPI..."
+          for i in {1..30}; do
+            if pip index versions acp-compiler 2>/dev/null | grep -q "$VERSION"; then
+              echo "acp-compiler $VERSION is now available"
+              break
+            fi
+            echo "Attempt $i: Package not yet available, waiting 10 seconds..."
+            sleep 10
+          done
+
+      # 4. acp-runtime (depends on acp-schema, acp-mcp, acp-compiler)
+      - name: Build acp-runtime
+        working-directory: acp-runtime
+        run: poetry build
+
+      - name: Publish acp-runtime to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: acp-runtime/dist/
+
+      - name: Wait for acp-runtime to be available
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          echo "Waiting for acp-runtime $VERSION to be available on PyPI..."
+          for i in {1..30}; do
+            if pip index versions acp-runtime 2>/dev/null | grep -q "$VERSION"; then
+              echo "acp-runtime $VERSION is now available"
+              break
+            fi
+            echo "Attempt $i: Package not yet available, waiting 10 seconds..."
+            sleep 10
+          done
+
+      # 5. acp-cli (depends on all packages)
+      - name: Build acp-cli
+        working-directory: acp-cli
+        run: poetry build
+
+      - name: Publish acp-cli to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: acp-cli/dist/
+

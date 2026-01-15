@@ -4,11 +4,23 @@ version = "0.1.0"
 description = "MCP server integration for ACP"
 authors = ["ACP Team"]
 readme = "README.md"
+license = "MIT"
 packages = [{include = "acp_mcp"}]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+]
+
+[tool.poetry.urls]
+"Homepage" = "https://github.com/acp-team/acp"
+"Repository" = "https://github.com/acp-team/acp"
 
 [tool.poetry.dependencies]
 python = "^3.12"
-acp-schema = {path = "../acp-schema", develop = true}
+acp-schema = "^0.1.0"
 pydantic = "^2.5"
 anyio = "^4.2"
 
