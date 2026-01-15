@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "acp-runtime"
+version = "0.1.0"
+description = "Workflow execution engine for ACP"
+authors = ["ACP Team"]
+readme = "README.md"
+packages = [{include = "acp_runtime"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+acp-schema = {path = "../acp-schema", develop = true}
+acp-mcp = {path = "../acp-mcp", develop = true}
+acp-compiler = {path = "../acp-compiler", develop = true}
+pydantic = "^2.5"
+langchain = "^0.3"
+langchain-openai = "^0.3"
+langchain-anthropic = "^0.3"
+anyio = "^4.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+

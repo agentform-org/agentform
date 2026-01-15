@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "acp-mcp"
+version = "0.1.0"
+description = "MCP server integration for ACP"
+authors = ["ACP Team"]
+readme = "README.md"
+packages = [{include = "acp_mcp"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+acp-schema = {path = "../acp-schema", develop = true}
+pydantic = "^2.5"
+anyio = "^4.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+

@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "acp-schema"
+version = "0.1.0"
+description = "Core data models and YAML schemas for ACP"
+authors = ["ACP Team"]
+readme = "README.md"
+packages = [{include = "acp_schema"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+pydantic = "^2.5"
+pyyaml = "^6.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+

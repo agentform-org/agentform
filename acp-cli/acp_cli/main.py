@@ -1,0 +1,39 @@
+"""Main CLI entry point for ACP."""
+
+import typer
+from rich.console import Console
+
+from acp_cli.commands.run import run
+from acp_cli.commands.validate import validate
+
+console = Console()
+
+app = typer.Typer(
+    name="acp",
+    help="ACP - Agent as code protocol",
+    add_completion=False,
+    no_args_is_help=True,
+)
+
+# Register commands
+app.command(name="validate", help="Validate an ACP specification file")(validate)
+app.command(name="run", help="Run an ACP workflow")(run)
+
+
+@app.callback()
+def callback() -> None:
+    """ACP - Agent as code protocol.
+
+    A declarative framework for defining AI agent systems using YAML.
+    """
+    pass
+
+
+def main() -> None:
+    """Entry point for the CLI."""
+    app()
+
+
+if __name__ == "__main__":
+    main()
+
