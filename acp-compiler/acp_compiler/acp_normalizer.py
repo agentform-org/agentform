@@ -10,15 +10,21 @@ from typing import Any
 from acp_compiler.acp_ast import (
     ACPFile,
     AgentBlock,
+    AndExpr,
     CapabilityBlock,
+    ComparisonExpr,
+    ConditionalExpr,
     EnvCall,
     ModelBlock,
     NestedBlock,
+    NotExpr,
+    OrExpr,
     PolicyBlock,
     ProviderBlock,
     Reference,
     ServerBlock,
     SourceLocation,
+    StateRef,
     StepBlock,
     Value,
     WorkflowBlock,
@@ -406,9 +412,13 @@ class ACPNormalizer:
         next_step = self._ref_to_name(next_ref, "step") if next_ref else None
 
         # Get condition (for condition steps)
-        condition = step.get_attribute("condition")
-        if not isinstance(condition, str):
-            condition = None
+        condition_val = step.get_attribute("condition")
+        condition: str | None = None
+        if isinstance(condition_val, str):
+            condition = condition_val
+        elif isinstance(condition_val, (ConditionalExpr, ComparisonExpr, AndExpr, OrExpr, NotExpr, StateRef)):
+            # Convert expression AST to string for runtime evaluation
+            condition = self._expr_to_string(condition_val)
 
         # Get branching refs
         on_true_ref = step.get_attribute("on_true")
@@ -517,7 +527,12 @@ class ACPNormalizer:
         return result
 
     def _value_to_expr(self, value: Value) -> Any:
-        """Convert AST value to expression string or primitive."""
+        """Convert AST value to expression string or primitive.
+        
+        For expression types (ConditionalExpr, ComparisonExpr, etc.), we convert
+        to a string representation that can be evaluated at runtime. Alternatively,
+        for static expressions (no state refs), we can evaluate at compile time.
+        """
         if isinstance(value, Reference):
             # Convert to $-prefixed expression for runtime
             path = value.path
@@ -528,12 +543,135 @@ class ACPNormalizer:
             elif path.startswith("state."):
                 return f"${path}"
             return path
+        elif isinstance(value, StateRef):
+            # State references are already $-prefixed
+            return value.path
+        elif isinstance(value, ConditionalExpr):
+            # Check if static (can evaluate at compile time)
+            if self._is_static_expr(value):
+                return self._eval_static_conditional(value)
+            # Convert to string representation for runtime evaluation
+            return self._expr_to_string(value)
+        elif isinstance(value, (ComparisonExpr, AndExpr, OrExpr, NotExpr)):
+            # Check if static
+            if self._is_static_expr(value):
+                return self._eval_static_expr(value)
+            # Convert to string for runtime
+            return self._expr_to_string(value)
         elif isinstance(value, list):
             return [self._value_to_expr(v) for v in value]
         elif isinstance(value, EnvCall):
             return f"env:{value.var_name}"
         else:
             return value
+
+    def _is_static_expr(self, expr: Any) -> bool:
+        """Check if an expression contains only static values (no state refs)."""
+        if isinstance(expr, StateRef):
+            return False
+        elif isinstance(expr, ConditionalExpr):
+            return (
+                self._is_static_expr(expr.condition)
+                and self._is_static_expr(expr.true_value)
+                and self._is_static_expr(expr.false_value)
+            )
+        elif isinstance(expr, ComparisonExpr):
+            return self._is_static_expr(expr.left) and self._is_static_expr(expr.right)
+        elif isinstance(expr, AndExpr):
+            return all(self._is_static_expr(op) for op in expr.operands)
+        elif isinstance(expr, OrExpr):
+            return all(self._is_static_expr(op) for op in expr.operands)
+        elif isinstance(expr, NotExpr):
+            return self._is_static_expr(expr.operand)
+        elif isinstance(expr, (Reference, EnvCall)):
+            return True  # These don't depend on runtime state
+        elif isinstance(expr, (str, int, float, bool)):
+            return True
+        return True
+
+    def _eval_static_expr(self, expr: Any) -> Any:
+        """Evaluate a static expression at compile time."""
+        if isinstance(expr, ComparisonExpr):
+            left = self._eval_static_expr(expr.left)
+            right = self._eval_static_expr(expr.right)
+            op = expr.operator
+            if op == "==":
+                return left == right
+            elif op == "!=":
+                return left != right
+            elif op == "<":
+                return left < right
+            elif op == ">":
+                return left > right
+            elif op == "<=":
+                return left <= right
+            elif op == ">=":
+                return left >= right
+        elif isinstance(expr, AndExpr):
+            return all(self._eval_static_expr(op) for op in expr.operands)
+        elif isinstance(expr, OrExpr):
+            return any(self._eval_static_expr(op) for op in expr.operands)
+        elif isinstance(expr, NotExpr):
+            return not self._eval_static_expr(expr.operand)
+        elif isinstance(expr, (str, int, float, bool)):
+            return expr
+        return expr
+
+    def _eval_static_conditional(self, expr: ConditionalExpr) -> Any:
+        """Evaluate a static conditional expression at compile time."""
+        condition = self._eval_static_expr(expr.condition)
+        if self._to_bool(condition):
+            return self._value_to_expr(expr.true_value)
+        else:
+            return self._value_to_expr(expr.false_value)
+
+    def _to_bool(self, value: Any) -> bool:
+        """Convert a value to boolean for condition evaluation."""
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            if value.lower() in ("false", "no", "0", ""):
+                return False
+            return True
+        if value is None:
+            return False
+        if isinstance(value, (int, float)):
+            return value != 0
+        return bool(value)
+
+    def _expr_to_string(self, expr: Any) -> str:
+        """Convert an expression AST to a string representation for runtime."""
+        if isinstance(expr, StateRef):
+            return expr.path
+        elif isinstance(expr, Reference):
+            path = expr.path
+            if path.startswith("input.") or path.startswith("state.") or path.startswith("result."):
+                return f"${path}"
+            return path
+        elif isinstance(expr, ConditionalExpr):
+            cond = self._expr_to_string(expr.condition)
+            true_val = self._expr_to_string(expr.true_value)
+            false_val = self._expr_to_string(expr.false_value)
+            return f"{cond} ? {true_val} : {false_val}"
+        elif isinstance(expr, ComparisonExpr):
+            left = self._expr_to_string(expr.left)
+            right = self._expr_to_string(expr.right)
+            return f"{left} {expr.operator} {right}"
+        elif isinstance(expr, AndExpr):
+            parts = [self._expr_to_string(op) for op in expr.operands]
+            return " && ".join(parts)
+        elif isinstance(expr, OrExpr):
+            parts = [self._expr_to_string(op) for op in expr.operands]
+            return " || ".join(parts)
+        elif isinstance(expr, NotExpr):
+            operand = self._expr_to_string(expr.operand)
+            return f"!{operand}"
+        elif isinstance(expr, str):
+            # Quote strings for safety
+            return f'"{expr}"'
+        elif isinstance(expr, (int, float, bool)):
+            return str(expr).lower() if isinstance(expr, bool) else str(expr)
+        return str(expr)
 
     def _value_to_str(self, value: Value) -> str:
         """Convert value to string."""

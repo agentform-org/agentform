@@ -52,9 +52,89 @@ class Reference(ASTNode):
         return self.path
 
 
+class StateRef(ASTNode):
+    """State reference: $input.field or $state.step.field.
+    
+    Used in conditional expressions to reference runtime state.
+    """
+
+    path: str  # Full path including $, e.g., "$input.name" or "$state.result.value"
+
+    @property
+    def parts(self) -> list[str]:
+        """Get path parts (excluding the $ prefix)."""
+        return self.path[1:].split(".")
+
+    @property
+    def root(self) -> str:
+        """Get the root (input or state)."""
+        return self.parts[0] if self.parts else ""
+
+    def __str__(self) -> str:
+        return self.path
+
+
+class ComparisonExpr(ASTNode):
+    """Comparison expression: left op right.
+    
+    Examples:
+        $state.result == "yes"
+        $input.count > 5
+    """
+
+    left: Any  # Value type
+    operator: str  # ==, !=, <, >, <=, >=
+    right: Any  # Value type
+
+
+class NotExpr(ASTNode):
+    """Logical NOT expression: !expr."""
+
+    operand: Any  # Expression to negate
+
+
+class AndExpr(ASTNode):
+    """Logical AND expression: expr && expr."""
+
+    operands: list[Any]  # List of expressions to AND together
+
+
+class OrExpr(ASTNode):
+    """Logical OR expression: expr || expr."""
+
+    operands: list[Any]  # List of expressions to OR together
+
+
+class ConditionalExpr(ASTNode):
+    """Conditional (ternary) expression: condition ? true_val : false_val.
+    
+    Examples:
+        $input.use_low_temp ? 0.1 : 0.7
+        $state.result == "yes" ? step.success : step.failure
+    """
+
+    condition: Any  # Expression that evaluates to boolean
+    true_value: Any  # Value if condition is true
+    false_value: Any  # Value if condition is false
+
+
 # Value types that can appear in attributes
 # Using Any for the recursive list type to avoid Pydantic recursion issues
-Value = Union[str, int, float, bool, EnvCall, Reference, list[Any]]
+Value = Union[
+    str,
+    int,
+    float,
+    bool,
+    EnvCall,
+    Reference,
+    StateRef,
+    ComparisonExpr,
+    NotExpr,
+    AndExpr,
+    OrExpr,
+    ConditionalExpr,
+    list[Any],
+]
 
 
 class Attribute(ASTNode):

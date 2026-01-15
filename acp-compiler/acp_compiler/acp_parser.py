@@ -14,16 +14,22 @@ from acp_compiler.acp_ast import (
     ACPBlock,
     ACPFile,
     AgentBlock,
+    AndExpr,
     Attribute,
     CapabilityBlock,
+    ComparisonExpr,
+    ConditionalExpr,
     EnvCall,
     ModelBlock,
     NestedBlock,
+    NotExpr,
+    OrExpr,
     PolicyBlock,
     ProviderBlock,
     Reference,
     ServerBlock,
     SourceLocation,
+    StateRef,
     StepBlock,
     Value,
     WorkflowBlock,
@@ -375,6 +381,71 @@ class ACPTransformer(Transformer):
     def env_value(self, meta: Any, children: list) -> EnvCall:
         return children[0]
 
+    def paren_expr(self, meta: Any, children: list) -> Any:
+        """Handle parenthesized expression: (expr)"""
+        return children[0]
+
+    def state_ref_value(self, meta: Any, children: list) -> StateRef:
+        """Handle state reference value."""
+        return children[0]
+
+    # State reference: $input.field or $state.step.field
+    def state_ref(self, meta: Any, children: list) -> StateRef:
+        """Parse state reference token."""
+        path = str(children[0])
+        return StateRef(path=path, location=self._loc(meta))
+
+    # Expression rules
+    def expr(self, meta: Any, children: list) -> Any:
+        """Top-level expression - pass through."""
+        return children[0]
+
+    def conditional_expr(self, meta: Any, children: list) -> ConditionalExpr:
+        """Conditional expression: condition ? true_val : false_val"""
+        condition = children[0]
+        true_value = children[1]
+        false_value = children[2]
+        return ConditionalExpr(
+            condition=condition,
+            true_value=true_value,
+            false_value=false_value,
+            location=self._loc(meta),
+        )
+
+    def or_expr(self, meta: Any, children: list) -> Any:
+        """Logical OR expression."""
+        if len(children) == 1:
+            return children[0]
+        return OrExpr(operands=list(children), location=self._loc(meta))
+
+    def and_expr(self, meta: Any, children: list) -> Any:
+        """Logical AND expression."""
+        if len(children) == 1:
+            return children[0]
+        return AndExpr(operands=list(children), location=self._loc(meta))
+
+    def logical_not(self, meta: Any, children: list) -> NotExpr:
+        """Logical NOT expression."""
+        return NotExpr(operand=children[0], location=self._loc(meta))
+
+    def comparison_expr(self, meta: Any, children: list) -> Any:
+        """Comparison expression: left op right."""
+        if len(children) == 1:
+            return children[0]
+        left = children[0]
+        operator = str(children[1])
+        right = children[2]
+        return ComparisonExpr(
+            left=left,
+            operator=operator,
+            right=right,
+            location=self._loc(meta),
+        )
+
+    def pass_through(self, meta: Any, children: list) -> Any:
+        """Pass through a single child unchanged."""
+        return children[0]
+
     # Reference
     def reference(self, meta: Any, children: list) -> Reference:
         parts = [str(c) for c in children]
@@ -400,6 +471,12 @@ class ACPTransformer(Transformer):
         return token
 
     def BOOLEAN(self, token: Token) -> Token:
+        return token
+
+    def STATE_REF(self, token: Token) -> Token:
+        return token
+
+    def COMP_OP(self, token: Token) -> Token:
         return token
 
 

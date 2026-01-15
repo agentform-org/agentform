@@ -123,7 +123,7 @@ workflow "smart_respond" {
 
   step "route" {
     type      = "condition"
-    condition = "state.classification.response == \"simple\""
+    condition = $state.classification.response == "simple"
     on_true   = step.quick_response
     on_false  = step.deep_response
   }

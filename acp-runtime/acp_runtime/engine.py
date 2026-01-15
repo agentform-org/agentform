@@ -384,30 +384,22 @@ class WorkflowEngine:
         step: ResolvedStep,
         state: WorkflowState,
     ) -> tuple[Any, str | None]:
-        """Execute a condition step."""
+        """Execute a condition step.
+        
+        Supports:
+        - Simple comparisons: $state.x == "value", $state.x != "value"
+        - Boolean checks: $state.x, !$state.x
+        - Logical operators: $state.x && $state.y, $state.x || $state.y
+        - Conditional expressions: condition ? true_val : false_val
+        - Comparison operators: <, >, <=, >=
+        """
         if not step.condition_expr:
             raise WorkflowError(f"Condition step '{step.id}' missing condition")
 
         self._logger.info("condition_step_start", step_id=step.id, condition=step.condition_expr)
 
-        # Simple condition evaluation
-        # Supports: $state.x == "value", $state.x, !$state.x
-        condition = step.condition_expr.strip()
-
-        if "==" in condition:
-            parts = condition.split("==")
-            left = state.resolve(parts[0].strip())
-            right = parts[1].strip().strip('"').strip("'")
-            result = str(left) == right
-        elif "!=" in condition:
-            parts = condition.split("!=")
-            left = state.resolve(parts[0].strip())
-            right = parts[1].strip().strip('"').strip("'")
-            result = str(left) != right
-        elif condition.startswith("!"):
-            result = not bool(state.resolve(condition[1:]))
-        else:
-            result = bool(state.resolve(condition))
+        # Use the enhanced evaluate_condition method from WorkflowState
+        result = state.evaluate_condition(step.condition_expr)
 
         next_step = step.on_true_step if result else step.on_false_step
         self._logger.info(

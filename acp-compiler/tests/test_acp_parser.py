@@ -6,14 +6,20 @@ from acp_compiler.acp_ast import (
     ACPBlock,
     ACPFile,
     AgentBlock,
+    AndExpr,
     Attribute,
+    ComparisonExpr,
+    ConditionalExpr,
     EnvCall,
     ModelBlock,
     NestedBlock,
+    NotExpr,
+    OrExpr,
     PolicyBlock,
     ProviderBlock,
     Reference,
     ServerBlock,
+    StateRef,
     StepBlock,
     WorkflowBlock,
 )
@@ -443,4 +449,195 @@ class TestFullExample:
         assert len(result.models) == 2
         assert len(result.agents) == 1
         assert len(result.workflows) == 1
+
+
+class TestConditionalExpressions:
+    """Test parsing conditional expressions (Terraform-style)."""
+
+    def test_parse_simple_conditional(self) -> None:
+        """Test parsing a simple conditional expression."""
+        content = '''
+        acp { version = "0.1" project = "test" }
+        model "gpt4" {
+            provider = provider.llm.openai.default
+            id = $input.use_mini ? "gpt-4o-mini" : "gpt-4o"
+        }
+        '''
+        result = parse_acp(content)
+        model = result.models[0]
+        model_id = model.get_attribute("id")
+
+        assert isinstance(model_id, ConditionalExpr)
+        assert isinstance(model_id.condition, StateRef)
+        assert model_id.condition.path == "$input.use_mini"
+        assert model_id.true_value == "gpt-4o-mini"
+        assert model_id.false_value == "gpt-4o"
+
+    def test_parse_conditional_with_comparison(self) -> None:
+        """Test parsing conditional with comparison in condition."""
+        content = '''
+        acp { version = "0.1" project = "test" }
+        model "gpt4" {
+            provider = provider.llm.openai.default
+            id = $input.env == "prod" ? "gpt-4o" : "gpt-4o-mini"
+        }
+        '''
+        result = parse_acp(content)
+        model = result.models[0]
+        model_id = model.get_attribute("id")
+
+        assert isinstance(model_id, ConditionalExpr)
+        assert isinstance(model_id.condition, ComparisonExpr)
+        assert model_id.condition.operator == "=="
+        assert isinstance(model_id.condition.left, StateRef)
+        assert model_id.condition.left.path == "$input.env"
+        assert model_id.condition.right == "prod"
+
+    def test_parse_conditional_with_number_values(self) -> None:
+        """Test parsing conditional with numeric values."""
+        content = '''
+        acp { version = "0.1" project = "test" }
+        model "gpt4" {
+            provider = provider.llm.openai.default
+            params {
+                temperature = $input.creative ? 0.9 : 0.1
+            }
+        }
+        '''
+        result = parse_acp(content)
+        model = result.models[0]
+        params = model.get_params_block()
+        temp = params.get_attribute("temperature")
+
+        assert isinstance(temp, ConditionalExpr)
+        assert temp.true_value == 0.9
+        assert temp.false_value == 0.1
+
+    def test_parse_logical_and_expression(self) -> None:
+        """Test parsing logical AND expressions."""
+        content = '''
+        acp { version = "0.1" project = "test" }
+        model "gpt4" {
+            provider = provider.llm.openai.default
+            enabled = $input.flag1 && $input.flag2
+        }
+        '''
+        result = parse_acp(content)
+        model = result.models[0]
+        enabled = model.get_attribute("enabled")
+
+        assert isinstance(enabled, AndExpr)
+        assert len(enabled.operands) == 2
+        assert isinstance(enabled.operands[0], StateRef)
+        assert isinstance(enabled.operands[1], StateRef)
+
+    def test_parse_logical_or_expression(self) -> None:
+        """Test parsing logical OR expressions."""
+        content = '''
+        acp { version = "0.1" project = "test" }
+        model "gpt4" {
+            provider = provider.llm.openai.default
+            enabled = $input.flag1 || $input.flag2
+        }
+        '''
+        result = parse_acp(content)
+        model = result.models[0]
+        enabled = model.get_attribute("enabled")
+
+        assert isinstance(enabled, OrExpr)
+        assert len(enabled.operands) == 2
+
+    def test_parse_logical_not_expression(self) -> None:
+        """Test parsing logical NOT expressions."""
+        content = '''
+        acp { version = "0.1" project = "test" }
+        model "gpt4" {
+            provider = provider.llm.openai.default
+            disabled = !$input.enabled
+        }
+        '''
+        result = parse_acp(content)
+        model = result.models[0]
+        disabled = model.get_attribute("disabled")
+
+        assert isinstance(disabled, NotExpr)
+        assert isinstance(disabled.operand, StateRef)
+
+    def test_parse_comparison_operators(self) -> None:
+        """Test parsing various comparison operators."""
+        content = '''
+        acp { version = "0.1" project = "test" }
+        model "gpt4" {
+            provider = provider.llm.openai.default
+            gt = $input.count > 5
+            lt = $input.count < 10
+            gte = $input.count >= 5
+            lte = $input.count <= 10
+            ne = $input.status != "error"
+        }
+        '''
+        result = parse_acp(content)
+        model = result.models[0]
+
+        gt = model.get_attribute("gt")
+        assert isinstance(gt, ComparisonExpr)
+        assert gt.operator == ">"
+
+        lt = model.get_attribute("lt")
+        assert isinstance(lt, ComparisonExpr)
+        assert lt.operator == "<"
+
+        gte = model.get_attribute("gte")
+        assert isinstance(gte, ComparisonExpr)
+        assert gte.operator == ">="
+
+        lte = model.get_attribute("lte")
+        assert isinstance(lte, ComparisonExpr)
+        assert lte.operator == "<="
+
+        ne = model.get_attribute("ne")
+        assert isinstance(ne, ComparisonExpr)
+        assert ne.operator == "!="
+
+    def test_parse_nested_conditional(self) -> None:
+        """Test parsing nested conditional expressions."""
+        content = '''
+        acp { version = "0.1" project = "test" }
+        model "gpt4" {
+            provider = provider.llm.openai.default
+            id = $input.tier == "premium" ? "gpt-4o" : ($input.tier == "standard" ? "gpt-4o-mini" : "gpt-3.5")
+        }
+        '''
+        result = parse_acp(content)
+        model = result.models[0]
+        model_id = model.get_attribute("id")
+
+        assert isinstance(model_id, ConditionalExpr)
+        # The false_value is another conditional
+        assert isinstance(model_id.false_value, ConditionalExpr)
+
+    def test_parse_state_ref_in_condition_step(self) -> None:
+        """Test parsing state references in condition step."""
+        content = '''
+        acp { version = "0.1" project = "test" }
+        workflow "test" {
+            entry = step.check
+            step "check" {
+                type = "condition"
+                condition = $state.result.status == "success"
+                on_true = step.success
+                on_false = step.failure
+            }
+            step "success" { type = "end" }
+            step "failure" { type = "end" }
+        }
+        '''
+        result = parse_acp(content)
+        workflow = result.workflows[0]
+        step = workflow.steps[0]
+        condition = step.get_attribute("condition")
+
+        assert isinstance(condition, ComparisonExpr)
+        assert isinstance(condition.left, StateRef)
+        assert condition.left.path == "$state.result.status"
 

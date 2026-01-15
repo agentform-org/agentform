@@ -233,3 +233,83 @@ class TestWorkflowStateSerialization:
 
         assert restored.input == original.input
         assert restored.state == original.state
+
+
+class TestEvaluateCondition:
+    """Tests for condition evaluation."""
+
+    def test_simple_equality(self):
+        """Test simple equality comparison."""
+        state = WorkflowState({"env": "prod"})
+        assert state.evaluate_condition('$input.env == "prod"') is True
+        assert state.evaluate_condition('$input.env == "dev"') is False
+
+    def test_inequality(self):
+        """Test inequality comparison."""
+        state = WorkflowState({"status": "success"})
+        assert state.evaluate_condition('$input.status != "error"') is True
+        assert state.evaluate_condition('$input.status != "success"') is False
+
+    def test_numeric_comparisons(self):
+        """Test numeric comparison operators."""
+        state = WorkflowState({"count": 5})
+        assert state.evaluate_condition("$input.count > 3") is True
+        assert state.evaluate_condition("$input.count > 5") is False
+        assert state.evaluate_condition("$input.count >= 5") is True
+        assert state.evaluate_condition("$input.count < 10") is True
+        assert state.evaluate_condition("$input.count <= 5") is True
+
+    def test_logical_and(self):
+        """Test logical AND operator."""
+        state = WorkflowState({"a": True, "b": True, "c": False})
+        assert state.evaluate_condition("$input.a && $input.b") is True
+        assert state.evaluate_condition("$input.a && $input.c") is False
+
+    def test_logical_or(self):
+        """Test logical OR operator."""
+        state = WorkflowState({"a": True, "b": False, "c": False})
+        assert state.evaluate_condition("$input.a || $input.b") is True
+        assert state.evaluate_condition("$input.b || $input.c") is False
+
+    def test_logical_not(self):
+        """Test logical NOT operator."""
+        state = WorkflowState({"flag": True})
+        assert state.evaluate_condition("!$input.flag") is False
+        state2 = WorkflowState({"flag": False})
+        assert state2.evaluate_condition("!$input.flag") is True
+
+    def test_combined_logical(self):
+        """Test combined logical operators."""
+        state = WorkflowState({"a": True, "b": False, "c": True})
+        # a && c should be True
+        assert state.evaluate_condition("$input.a && $input.c") is True
+        # a && b should be False
+        assert state.evaluate_condition("$input.a && $input.b") is False
+        # (a && b) || c should be True
+        assert state.evaluate_condition("$input.a && $input.b || $input.c") is True
+
+    def test_state_ref_comparison(self):
+        """Test state reference in comparisons."""
+        state = WorkflowState()
+        state.set("result", {"status": "success", "code": 200})
+        assert state.evaluate_condition('$state.result.status == "success"') is True
+        assert state.evaluate_condition("$state.result.code == 200") is True
+
+    def test_boolean_value_direct(self):
+        """Test evaluating boolean values directly."""
+        state = WorkflowState({"enabled": True, "disabled": False})
+        assert state.evaluate_condition("$input.enabled") is True
+        assert state.evaluate_condition("$input.disabled") is False
+
+    def test_string_truthiness(self):
+        """Test string truthiness evaluation."""
+        state = WorkflowState({"filled": "hello", "empty": ""})
+        assert state.evaluate_condition("$input.filled") is True
+        assert state.evaluate_condition("$input.empty") is False
+
+    def test_complex_condition_with_state_and_input(self):
+        """Test complex condition with both state and input."""
+        state = WorkflowState({"threshold": 10})
+        state.set("metrics", {"count": 15})
+        assert state.evaluate_condition("$state.metrics.count > 10") is True
+        assert state.evaluate_condition("$state.metrics.count > 20") is False
