@@ -1,5 +1,5 @@
 """Version constants for ACP."""
 
-VERSION = "0.1.0"
+version = "0.0.1"
 SPEC_VERSION = "0.1"
 

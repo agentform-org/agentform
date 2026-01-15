@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "acp-compiler"
-version = "0.1.0"
+version = "0.0.1"
 description = "YAML compilation and validation for ACP"
 authors = ["ACP Team"]
 readme = "README.md"
