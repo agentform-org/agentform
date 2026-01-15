@@ -10,7 +10,7 @@ from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.syntax import Syntax
 
-from acp_compiler import compile_spec_file
+from acp_compiler import compile_file
 from acp_compiler.compiler import CompilationError
 from acp_runtime import WorkflowEngine
 from acp_runtime.engine import WorkflowError
@@ -18,6 +18,10 @@ from acp_runtime.logging_config import configure_logging, get_logger
 from acp_schema.ir import ResolvedWorkflow
 
 console = Console()
+
+# Supported file extensions
+ACP_EXTENSIONS = {".acp"}
+YAML_EXTENSIONS = {".yaml", ".yml"}
 
 
 def extract_input_fields(workflow: ResolvedWorkflow) -> set[str]:
@@ -93,13 +97,25 @@ def prompt_for_inputs(required_fields: set[str], existing_input: dict) -> dict:
     return result
 
 
+def _find_default_spec_file() -> Path:
+    """Find the default spec file in current directory.
+
+    Looks for acp.acp first, then acp.yaml, then spec.acp, then spec.yaml.
+    """
+    for name in ["acp.acp", "acp.yaml", "spec.acp", "spec.yaml"]:
+        path = Path(name)
+        if path.exists():
+            return path
+    return Path("acp.yaml")  # Default fallback
+
+
 def run(
     workflow: str = typer.Argument(help="Name of the workflow to run"),
     spec_file: Path = typer.Option(
-        Path("acp.yaml"),
+        None,
         "--spec",
         "-s",
-        help="Path to the YAML specification file",
+        help="Path to the specification file (.acp, .yaml, or .yml). Auto-detected if not provided.",
     ),
     input_data: str | None = typer.Option(
         None,
@@ -134,8 +150,11 @@ def run(
 ) -> None:
     """Run an ACP workflow.
 
+    Supports both .acp (native schema) and .yaml/.yml (YAML) formats.
+    Auto-detects format based on file extension.
+
     This will:
-    1. Compile the YAML specification
+    1. Compile the specification (auto-detecting format)
     2. Connect to MCP servers (if any)
     3. Execute the specified workflow
     4. Output the result
@@ -144,10 +163,16 @@ def run(
     configure_logging(verbose=verbose)
     logger = get_logger("acp_cli.run")
 
+    # Auto-detect spec file if not provided
+    if spec_file is None:
+        spec_file = _find_default_spec_file()
+
     logger.info("workflow_run_start", workflow=workflow, spec_file=str(spec_file), verbose=verbose)
 
+    # Determine file type for display
+    file_type = "ACP" if spec_file.suffix.lower() in ACP_EXTENSIONS else "YAML"
     console.print(f"\n[bold]Running workflow:[/bold] {workflow}")
-    console.print(f"[bold]Spec file:[/bold] {spec_file}\n")
+    console.print(f"[bold]Spec file ({file_type}):[/bold] {spec_file}\n")
 
     # Check spec file exists
     if not spec_file.exists():
@@ -201,7 +226,7 @@ def run(
         progress.add_task("Compiling specification...", total=None)
 
         try:
-            compiled = compile_spec_file(spec_file, check_env=True, resolve_credentials=True)
+            compiled = compile_file(spec_file, check_env=True, resolve_credentials=True)
             logger.info(
                 "compilation_success",
                 workflows=list(compiled.workflows.keys()),

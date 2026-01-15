@@ -1,0 +1,97 @@
+// ACP Native Schema Grammar
+// A block-based configuration language for AI agent systems
+
+start: block+
+
+// Top-level blocks
+block: acp_block
+     | provider_block
+     | server_block
+     | capability_block
+     | policy_block
+     | model_block
+     | agent_block
+     | workflow_block
+
+// ACP metadata block
+acp_block: "acp" "{" acp_body "}"
+acp_body: attribute*
+
+// Provider block: provider "type.vendor" "name" { ... }
+provider_block: "provider" STRING STRING "{" provider_body "}"
+provider_body: (attribute | nested_block)*
+
+// Server block: server "name" { ... }
+server_block: "server" STRING "{" server_body "}"
+server_body: (attribute | nested_block)*
+
+// Capability block: capability "name" { ... }
+capability_block: "capability" STRING "{" capability_body "}"
+capability_body: (attribute | nested_block)*
+
+// Policy block: policy "name" { ... }
+policy_block: "policy" STRING "{" policy_body "}"
+policy_body: (attribute | nested_block)*
+
+// Model block: model "name" { ... }
+model_block: "model" STRING "{" model_body "}"
+model_body: (attribute | nested_block)*
+
+// Agent block: agent "name" { ... }
+agent_block: "agent" STRING "{" agent_body "}"
+agent_body: (attribute | nested_block)*
+
+// Workflow block with nested steps
+workflow_block: "workflow" STRING "{" workflow_body "}"
+workflow_body: (attribute | step_block)*
+
+// Step block (inside workflow)
+step_block: "step" STRING "{" step_body "}"
+step_body: (attribute | nested_block)*
+
+// Generic nested block: identifier { ... } or identifier "label" { ... }
+nested_block: IDENTIFIER "{" nested_body "}"           -> unlabeled_nested_block
+            | IDENTIFIER STRING "{" nested_body "}"   -> labeled_nested_block
+nested_body: (attribute | nested_block)*
+
+// Attribute assignment
+attribute: IDENTIFIER "=" value
+
+// Values
+value: HEREDOC          -> heredoc_value
+     | STRING           -> string_value
+     | SIGNED_NUMBER    -> number_value
+     | BOOLEAN          -> boolean_value
+     | reference        -> reference_value
+     | array            -> array_value
+     | env_call         -> env_value
+
+// Reference: dotted identifier path (e.g., provider.llm.openai.default)
+reference: IDENTIFIER ("." IDENTIFIER)+
+
+// Array: [ value, value, ... ]
+array: "[" [value ("," value)* ","?] "]"
+
+// Environment variable function
+env_call: "env" "(" STRING ")"
+
+// Terminals
+// BOOLEAN must be defined with higher priority than IDENTIFIER
+BOOLEAN.2: "true" | "false"
+IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
+STRING: ESCAPED_STRING
+SIGNED_NUMBER: NUMBER
+HEREDOC: /<<EOF\n[\s\S]*?\nEOF/
+
+// Comments and whitespace
+COMMENT: "//" /[^\n]*/
+BLOCK_COMMENT: "/*" /(.|\n)*?/ "*/"
+
+%import common.ESCAPED_STRING
+%import common.NUMBER
+%import common.WS
+
+%ignore WS
+%ignore COMMENT
+%ignore BLOCK_COMMENT
+

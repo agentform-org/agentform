@@ -1,0 +1,410 @@
+"""Reference resolver for ACP native schema.
+
+Builds a symbol table from parsed blocks and resolves all references
+to ensure they point to valid targets.
+"""
+
+from dataclasses import dataclass, field
+
+from acp_compiler.acp_ast import (
+    ACPFile,
+    AgentBlock,
+    Attribute,
+    CapabilityBlock,
+    EnvCall,
+    ModelBlock,
+    NestedBlock,
+    PolicyBlock,
+    ProviderBlock,
+    Reference,
+    ServerBlock,
+    SourceLocation,
+    StepBlock,
+    Value,
+    WorkflowBlock,
+)
+
+
+@dataclass
+class Symbol:
+    """A symbol in the symbol table."""
+
+    name: str
+    kind: str  # "provider", "model", "agent", "policy", "workflow", "step", "server", "capability"
+    location: SourceLocation | None = None
+    parent: str | None = None  # For nested symbols (e.g., steps belong to workflows)
+    block: object | None = None  # Reference to the actual block
+
+
+@dataclass
+class ResolutionError:
+    """An error during reference resolution."""
+
+    message: str
+    location: SourceLocation | None = None
+
+    def __str__(self) -> str:
+        if self.location:
+            return f"{self.location}: {self.message}"
+        return self.message
+
+
+@dataclass
+class ResolutionResult:
+    """Result of reference resolution."""
+
+    symbols: dict[str, Symbol] = field(default_factory=dict)
+    errors: list[ResolutionError] = field(default_factory=list)
+
+    @property
+    def is_valid(self) -> bool:
+        """Check if resolution succeeded without errors."""
+        return len(self.errors) == 0
+
+    def add_error(self, message: str, location: SourceLocation | None = None) -> None:
+        """Add a resolution error."""
+        self.errors.append(ResolutionError(message, location))
+
+    def add_symbol(self, symbol: Symbol) -> None:
+        """Add a symbol to the table."""
+        self.symbols[symbol.name] = symbol
+
+
+class ReferenceResolver:
+    """Resolves references in an ACP AST.
+
+    This class:
+    1. Builds a symbol table from all named blocks
+    2. Resolves all references to ensure they point to valid targets
+    3. Reports unresolved references with source locations
+    """
+
+    def __init__(self, acp_file: ACPFile):
+        self.acp_file = acp_file
+        self.result = ResolutionResult()
+
+    def resolve(self) -> ResolutionResult:
+        """Resolve all references in the AST.
+
+        Returns:
+            ResolutionResult with symbol table and any errors
+        """
+        # Phase 1: Build symbol table
+        self._build_symbol_table()
+
+        # Phase 2: Resolve all references
+        self._resolve_references()
+
+        return self.result
+
+    def _build_symbol_table(self) -> None:
+        """Build the symbol table from all named blocks."""
+        # Providers: provider.llm.openai.default
+        for provider in self.acp_file.providers:
+            full_name = f"provider.{provider.full_name}"
+            if full_name in self.result.symbols:
+                self.result.add_error(
+                    f"Duplicate provider: {full_name}",
+                    provider.location,
+                )
+            else:
+                self.result.add_symbol(
+                    Symbol(
+                        name=full_name,
+                        kind="provider",
+                        location=provider.location,
+                        block=provider,
+                    )
+                )
+
+        # Servers: server.name
+        for server in self.acp_file.servers:
+            full_name = f"server.{server.name}"
+            if full_name in self.result.symbols:
+                self.result.add_error(
+                    f"Duplicate server: {server.name}",
+                    server.location,
+                )
+            else:
+                self.result.add_symbol(
+                    Symbol(
+                        name=full_name,
+                        kind="server",
+                        location=server.location,
+                        block=server,
+                    )
+                )
+
+        # Capabilities: capability.name
+        for capability in self.acp_file.capabilities:
+            full_name = f"capability.{capability.name}"
+            if full_name in self.result.symbols:
+                self.result.add_error(
+                    f"Duplicate capability: {capability.name}",
+                    capability.location,
+                )
+            else:
+                self.result.add_symbol(
+                    Symbol(
+                        name=full_name,
+                        kind="capability",
+                        location=capability.location,
+                        block=capability,
+                    )
+                )
+
+        # Policies: policy.name
+        for policy in self.acp_file.policies:
+            full_name = f"policy.{policy.name}"
+            if full_name in self.result.symbols:
+                self.result.add_error(
+                    f"Duplicate policy: {policy.name}",
+                    policy.location,
+                )
+            else:
+                self.result.add_symbol(
+                    Symbol(
+                        name=full_name,
+                        kind="policy",
+                        location=policy.location,
+                        block=policy,
+                    )
+                )
+
+        # Models: model.name
+        for model in self.acp_file.models:
+            full_name = f"model.{model.name}"
+            if full_name in self.result.symbols:
+                self.result.add_error(
+                    f"Duplicate model: {model.name}",
+                    model.location,
+                )
+            else:
+                self.result.add_symbol(
+                    Symbol(
+                        name=full_name,
+                        kind="model",
+                        location=model.location,
+                        block=model,
+                    )
+                )
+
+        # Agents: agent.name
+        for agent in self.acp_file.agents:
+            full_name = f"agent.{agent.name}"
+            if full_name in self.result.symbols:
+                self.result.add_error(
+                    f"Duplicate agent: {agent.name}",
+                    agent.location,
+                )
+            else:
+                self.result.add_symbol(
+                    Symbol(
+                        name=full_name,
+                        kind="agent",
+                        location=agent.location,
+                        block=agent,
+                    )
+                )
+
+        # Workflows and their steps
+        for workflow in self.acp_file.workflows:
+            workflow_name = f"workflow.{workflow.name}"
+            if workflow_name in self.result.symbols:
+                self.result.add_error(
+                    f"Duplicate workflow: {workflow.name}",
+                    workflow.location,
+                )
+            else:
+                self.result.add_symbol(
+                    Symbol(
+                        name=workflow_name,
+                        kind="workflow",
+                        location=workflow.location,
+                        block=workflow,
+                    )
+                )
+
+            # Steps are scoped to workflow but we track them globally with step.id
+            # for reference resolution (used within the same workflow)
+            step_ids: set[str] = set()
+            for step in workflow.steps:
+                if step.step_id in step_ids:
+                    self.result.add_error(
+                        f"Duplicate step '{step.step_id}' in workflow '{workflow.name}'",
+                        step.location,
+                    )
+                else:
+                    step_ids.add(step.step_id)
+                    # Register step with workflow-scoped name
+                    step_name = f"step.{step.step_id}"
+                    self.result.add_symbol(
+                        Symbol(
+                            name=step_name,
+                            kind="step",
+                            location=step.location,
+                            parent=workflow.name,
+                            block=step,
+                        )
+                    )
+
+    def _resolve_references(self) -> None:
+        """Resolve all references in the AST."""
+        # Resolve model references (provider)
+        for model in self.acp_file.models:
+            self._resolve_model_references(model)
+
+        # Resolve agent references (model, policy, capabilities)
+        for agent in self.acp_file.agents:
+            self._resolve_agent_references(agent)
+
+        # Resolve capability references (server)
+        for capability in self.acp_file.capabilities:
+            self._resolve_capability_references(capability)
+
+        # Resolve workflow references (steps, agents)
+        for workflow in self.acp_file.workflows:
+            self._resolve_workflow_references(workflow)
+
+    def _resolve_model_references(self, model: ModelBlock) -> None:
+        """Resolve references in a model block."""
+        # Check provider reference
+        provider_attr = model.get_attribute("provider")
+        if isinstance(provider_attr, Reference):
+            self._check_reference(provider_attr, "provider", model.location)
+
+    def _resolve_agent_references(self, agent: AgentBlock) -> None:
+        """Resolve references in an agent block."""
+        # Check model reference
+        model_attr = agent.get_attribute("model")
+        if isinstance(model_attr, Reference):
+            self._check_reference(model_attr, "model", agent.location)
+
+        # Check fallback_models array
+        fallback_attr = agent.get_attribute("fallback_models")
+        if isinstance(fallback_attr, list):
+            for item in fallback_attr:
+                if isinstance(item, Reference):
+                    self._check_reference(item, "model", agent.location)
+
+        # Check policy reference
+        policy_attr = agent.get_attribute("policy")
+        if isinstance(policy_attr, Reference):
+            self._check_reference(policy_attr, "policy", agent.location)
+
+        # Check allow array (capabilities)
+        allow_attr = agent.get_attribute("allow")
+        if isinstance(allow_attr, list):
+            for item in allow_attr:
+                if isinstance(item, Reference):
+                    self._check_reference(item, "capability", agent.location)
+
+    def _resolve_capability_references(self, capability: CapabilityBlock) -> None:
+        """Resolve references in a capability block."""
+        # Check server reference
+        server_attr = capability.get_attribute("server")
+        if isinstance(server_attr, Reference):
+            self._check_reference(server_attr, "server", capability.location)
+
+    def _resolve_workflow_references(self, workflow: WorkflowBlock) -> None:
+        """Resolve references in a workflow block."""
+        # Check entry reference
+        entry_attr = workflow.get_attribute("entry")
+        if isinstance(entry_attr, Reference):
+            self._check_reference(entry_attr, "step", workflow.location)
+
+        # Check step references
+        for step in workflow.steps:
+            self._resolve_step_references(step, workflow.name)
+
+    def _resolve_step_references(self, step: StepBlock, workflow_name: str) -> None:
+        """Resolve references in a step block."""
+        # Check agent reference
+        agent_attr = step.get_attribute("agent")
+        if isinstance(agent_attr, Reference):
+            self._check_reference(agent_attr, "agent", step.location)
+
+        # Check capability reference (for call steps)
+        cap_attr = step.get_attribute("capability")
+        if isinstance(cap_attr, Reference):
+            self._check_reference(cap_attr, "capability", step.location)
+
+        # Check next reference
+        next_attr = step.get_attribute("next")
+        if isinstance(next_attr, Reference):
+            self._check_reference(next_attr, "step", step.location)
+
+        # Check on_true/on_false references (for condition steps)
+        for attr_name in ["on_true", "on_false", "on_approve", "on_reject"]:
+            attr_val = step.get_attribute(attr_name)
+            if isinstance(attr_val, Reference):
+                self._check_reference(attr_val, "step", step.location)
+
+        # Check input block references
+        input_block = step.get_input_block()
+        if input_block:
+            self._resolve_nested_block_values(input_block)
+
+        # Check args block references
+        args_block = step.get_args_block()
+        if args_block:
+            self._resolve_nested_block_values(args_block)
+
+    def _resolve_nested_block_values(self, block: NestedBlock) -> None:
+        """Resolve references in nested block values.
+
+        Note: input.* and result.* references are runtime values,
+        not compile-time references to blocks, so we don't validate them.
+        """
+        for attr in block.attributes:
+            value = attr.value
+            if isinstance(value, Reference):
+                # input.* and result.* and state.* are runtime references
+                if value.parts[0] in ("input", "result", "state"):
+                    continue
+                # Other references should be validated
+                self._check_reference_exists(value)
+
+    def _check_reference(
+        self,
+        ref: Reference,
+        expected_kind: str,
+        context_location: SourceLocation | None,
+    ) -> None:
+        """Check that a reference exists and has the expected kind."""
+        ref_path = ref.path
+        symbol = self.result.symbols.get(ref_path)
+
+        if symbol is None:
+            self.result.add_error(
+                f"Unresolved reference: {ref_path}",
+                ref.location or context_location,
+            )
+        elif symbol.kind != expected_kind:
+            self.result.add_error(
+                f"Reference '{ref_path}' is a {symbol.kind}, expected {expected_kind}",
+                ref.location or context_location,
+            )
+
+    def _check_reference_exists(self, ref: Reference) -> None:
+        """Check that a reference exists (any kind)."""
+        ref_path = ref.path
+        if ref_path not in self.result.symbols:
+            self.result.add_error(
+                f"Unresolved reference: {ref_path}",
+                ref.location,
+            )
+
+
+def resolve_references(acp_file: ACPFile) -> ResolutionResult:
+    """Resolve all references in an ACP file.
+
+    Args:
+        acp_file: Parsed ACP AST
+
+    Returns:
+        ResolutionResult with symbol table and any errors
+    """
+    resolver = ReferenceResolver(acp_file)
+    return resolver.resolve()
+

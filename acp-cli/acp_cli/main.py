@@ -3,6 +3,7 @@
 import typer
 from rich.console import Console
 
+from acp_cli.commands.compile import compile_cmd
 from acp_cli.commands.run import run
 from acp_cli.commands.validate import validate
 
@@ -17,6 +18,7 @@ app = typer.Typer(
 
 # Register commands
 app.command(name="validate", help="Validate an ACP specification file")(validate)
+app.command(name="compile", help="Compile an ACP specification to IR")(compile_cmd)
 app.command(name="run", help="Run an ACP workflow")(run)
 
 

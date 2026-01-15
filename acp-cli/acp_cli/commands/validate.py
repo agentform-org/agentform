@@ -6,15 +6,25 @@ import typer
 from rich.console import Console
 from rich.panel import Panel
 
-from acp_compiler import parse_yaml_file
+from acp_compiler import CompilationError, validate_file
 from acp_compiler.parser import ParseError
-from acp_compiler.validator import validate_spec
 
 console = Console()
 
+# Supported file extensions
+ACP_EXTENSIONS = {".acp"}
+YAML_EXTENSIONS = {".yaml", ".yml"}
+
+
+def _get_file_type(path: Path) -> str:
+    """Get file type description for display."""
+    if path.suffix.lower() in ACP_EXTENSIONS:
+        return "ACP"
+    return "YAML"
+
 
 def validate(
-    spec_file: Path = typer.Argument(help="Path to the YAML specification file"),
+    spec_file: Path = typer.Argument(help="Path to the specification file (.acp, .yaml, or .yml)"),
     check_env: bool = typer.Option(
         True,
         "--check-env",
@@ -26,10 +36,13 @@ def validate(
         help="Skip checking environment variables",
     ),
 ) -> None:
-    """Validate an ACP YAML specification file.
+    """Validate an ACP specification file.
+
+    Supports both .acp (native schema) and .yaml/.yml (YAML) formats.
+    Auto-detects format based on file extension.
 
     This performs:
-    - YAML syntax validation
+    - Syntax validation
     - Schema validation (Pydantic)
     - Reference validation (agents, capabilities, policies, etc.)
     - Environment variable checks (optional)
@@ -39,24 +52,25 @@ def validate(
     # Handle the two flags
     should_check_env = check_env and not no_check_env
 
-    console.print(f"\n[bold]Validating:[/bold] {spec_file}\n")
+    file_type = _get_file_type(spec_file)
+    console.print(f"\n[bold]Validating ({file_type}):[/bold] {spec_file}\n")
 
     # Check file exists
     if not spec_file.exists():
         console.print(f"[red]✗[/red] File not found: {spec_file}")
         raise typer.Exit(1)
 
-    # Parse
+    # Validate using unified function
     try:
-        spec = parse_yaml_file(spec_file)
-        console.print("[green]✓[/green] YAML syntax valid")
+        result = validate_file(spec_file, check_env=should_check_env)
+        console.print(f"[green]✓[/green] {file_type} syntax valid")
         console.print("[green]✓[/green] Schema validation passed")
+    except CompilationError as e:
+        console.print(f"[red]✗[/red] Parse error:\n{e}")
+        raise typer.Exit(1) from None
     except ParseError as e:
         console.print(f"[red]✗[/red] Parse error:\n{e}")
         raise typer.Exit(1) from None
-
-    # Validate
-    result = validate_spec(spec, check_env=should_check_env)
 
     # Report errors
     if result.errors:
@@ -74,21 +88,31 @@ def validate(
     if result.is_valid:
         console.print("\n[green]✓ Validation passed[/green]")
 
-        # Print summary
-        summary = []
-        if spec.providers.llm:
-            summary.append(f"Providers: {', '.join(spec.providers.llm.keys())}")
-        if spec.servers:
-            summary.append(f"Servers: {len(spec.servers)}")
-        if spec.capabilities:
-            summary.append(f"Capabilities: {len(spec.capabilities)}")
-        if spec.agents:
-            summary.append(f"Agents: {len(spec.agents)}")
-        if spec.workflows:
-            summary.append(f"Workflows: {len(spec.workflows)}")
+        # Print summary by compiling and inspecting the spec
+        try:
+            from acp_compiler import compile_file
 
-        if summary:
-            console.print(Panel("\n".join(summary), title="Specification Summary"))
+            compiled = compile_file(spec_file, check_env=False, resolve_credentials=False)
+
+            summary = []
+            if compiled.providers:
+                summary.append(f"Providers: {', '.join(compiled.providers.keys())}")
+            if compiled.servers:
+                summary.append(f"Servers: {len(compiled.servers)}")
+            if compiled.capabilities:
+                summary.append(f"Capabilities: {len(compiled.capabilities)}")
+            if compiled.agents:
+                summary.append(f"Agents: {len(compiled.agents)}")
+            if compiled.workflows:
+                summary.append(f"Workflows: {len(compiled.workflows)}")
+
+            if summary:
+                from rich.panel import Panel
+
+                console.print(Panel("\n".join(summary), title="Specification Summary"))
+        except Exception:
+            # If compilation fails for any reason, just skip the summary
+            pass
     else:
         console.print("\n[red]✗ Validation failed[/red]")
         raise typer.Exit(1)
