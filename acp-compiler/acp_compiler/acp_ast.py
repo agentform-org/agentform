@@ -162,7 +162,7 @@ class NestedBlock(ASTNode):
         for attr in self.attributes:
             if attr.name == name:
                 # Type assertion: attr.value is Any but should be Value
-                return cast(Value, attr.value)
+                return cast("Value", attr.value)
         return None
 
     def get_attributes_dict(self) -> dict[str, Value]:
@@ -206,7 +206,7 @@ class ProviderBlock(ASTNode):
         for attr in self.attributes:
             if attr.name == name:
                 # Type assertion: attr.value is Any but should be Value
-                return cast(Value, attr.value)
+                return cast("Value", attr.value)
         return None
 
 
@@ -229,7 +229,7 @@ class ServerBlock(ASTNode):
         for attr in self.attributes:
             if attr.name == name:
                 # Type assertion: attr.value is Any but should be Value
-                return cast(Value, attr.value)
+                return cast("Value", attr.value)
         return None
 
 
@@ -252,7 +252,7 @@ class CapabilityBlock(ASTNode):
         for attr in self.attributes:
             if attr.name == name:
                 # Type assertion: attr.value is Any but should be Value
-                return cast(Value, attr.value)
+                return cast("Value", attr.value)
         return None
 
 
@@ -296,7 +296,7 @@ class ModelBlock(ASTNode):
         for attr in self.attributes:
             if attr.name == name:
                 # Type assertion: attr.value is Any but should be Value
-                return cast(Value, attr.value)
+                return cast("Value", attr.value)
         return None
 
     def get_params_block(self) -> NestedBlock | None:
@@ -328,7 +328,7 @@ class AgentBlock(ASTNode):
         for attr in self.attributes:
             if attr.name == name:
                 # Type assertion: attr.value is Any but should be Value
-                return cast(Value, attr.value)
+                return cast("Value", attr.value)
         return None
 
 
@@ -353,7 +353,7 @@ class StepBlock(ASTNode):
         for attr in self.attributes:
             if attr.name == name:
                 # Type assertion: attr.value is Any but should be Value
-                return cast(Value, attr.value)
+                return cast("Value", attr.value)
         return None
 
     def get_input_block(self) -> NestedBlock | None:
@@ -394,7 +394,7 @@ class WorkflowBlock(ASTNode):
         for attr in self.attributes:
             if attr.name == name:
                 # Type assertion: attr.value is Any but should be Value
-                return cast(Value, attr.value)
+                return cast("Value", attr.value)
         return None
 
 

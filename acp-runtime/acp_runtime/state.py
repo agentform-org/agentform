@@ -165,17 +165,17 @@ class WorkflowState:
         op = expr.operator
 
         if op == "==":
-            return cast(bool, left == right)
+            return cast("bool", left == right)
         elif op == "!=":
-            return cast(bool, left != right)
+            return cast("bool", left != right)
         elif op == "<":
-            return cast(bool, left < right)
+            return cast("bool", left < right)
         elif op == ">":
-            return cast(bool, left > right)
+            return cast("bool", left > right)
         elif op == "<=":
-            return cast(bool, left <= right)
+            return cast("bool", left <= right)
         elif op == ">=":
-            return cast(bool, left >= right)
+            return cast("bool", left >= right)
         else:
             raise ExpressionError(f"Unknown comparison operator: {op}")
 

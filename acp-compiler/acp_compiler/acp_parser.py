@@ -539,7 +539,7 @@ def parse_acp(content: str, file_path: str | None = None) -> ACPFile:
     try:
         tree = parser.parse(content)
         result = transformer.transform(tree)
-        return cast(ACPFile, result)
+        return cast("ACPFile", result)
     except UnexpectedCharacters as e:
         raise ACPParseError(
             f"Unexpected character: {e.char!r}",
