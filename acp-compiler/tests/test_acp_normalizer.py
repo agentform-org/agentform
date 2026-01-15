@@ -1,6 +1,5 @@
 """Tests for ACP normalizer."""
 
-import pytest
 
 from acp_compiler.acp_normalizer import normalize_acp
 from acp_compiler.acp_parser import parse_acp

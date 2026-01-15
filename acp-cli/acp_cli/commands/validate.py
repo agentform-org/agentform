@@ -4,7 +4,6 @@ from pathlib import Path
 
 import typer
 from rich.console import Console
-from rich.panel import Panel
 
 from acp_compiler import CompilationError, validate_file
 
@@ -71,8 +70,9 @@ def validate(
 
         # Print summary by compiling and inspecting the spec
         try:
-            from acp_compiler import compile_file
             from rich.panel import Panel
+
+            from acp_compiler import compile_file
 
             compiled = compile_file(spec_file, check_env=False, resolve_credentials=False)
 

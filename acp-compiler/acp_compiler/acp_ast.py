@@ -4,7 +4,7 @@ These models represent the parsed structure of .acp files before
 normalization to the existing SpecRoot format.
 """
 
-from typing import Any, Union
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -54,7 +54,7 @@ class Reference(ASTNode):
 
 class StateRef(ASTNode):
     """State reference: $input.field or $state.step.field.
-    
+
     Used in conditional expressions to reference runtime state.
     """
 
@@ -76,7 +76,7 @@ class StateRef(ASTNode):
 
 class ComparisonExpr(ASTNode):
     """Comparison expression: left op right.
-    
+
     Examples:
         $state.result == "yes"
         $input.count > 5
@@ -107,7 +107,7 @@ class OrExpr(ASTNode):
 
 class ConditionalExpr(ASTNode):
     """Conditional (ternary) expression: condition ? true_val : false_val.
-    
+
     Examples:
         $input.use_low_temp ? 0.1 : 0.7
         $state.result == "yes" ? step.success : step.failure
@@ -120,21 +120,21 @@ class ConditionalExpr(ASTNode):
 
 # Value types that can appear in attributes
 # Using Any for the recursive list type to avoid Pydantic recursion issues
-Value = Union[
-    str,
-    int,
-    float,
-    bool,
-    EnvCall,
-    Reference,
-    StateRef,
-    ComparisonExpr,
-    NotExpr,
-    AndExpr,
-    OrExpr,
-    ConditionalExpr,
-    list[Any],
-]
+Value = (
+    str
+    | int
+    | float
+    | bool
+    | EnvCall
+    | Reference
+    | StateRef
+    | ComparisonExpr
+    | NotExpr
+    | AndExpr
+    | OrExpr
+    | ConditionalExpr
+    | list[Any]
+)
 
 
 class Attribute(ASTNode):

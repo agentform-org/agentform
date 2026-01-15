@@ -385,7 +385,7 @@ class WorkflowEngine:
         state: WorkflowState,
     ) -> tuple[Any, str | None]:
         """Execute a condition step.
-        
+
         Supports:
         - Simple comparisons: $state.x == "value", $state.x != "value"
         - Boolean checks: $state.x, !$state.x

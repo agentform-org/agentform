@@ -10,9 +10,10 @@ try:
         ConditionalExpr,
         NotExpr,
         OrExpr,
-        StateRef,
         Reference,
+        StateRef,
     )
+
     _HAS_AST_TYPES = True
 except ImportError:
     _HAS_AST_TYPES = False
@@ -179,17 +180,11 @@ class WorkflowState:
 
     def _eval_and(self, expr: Any) -> bool:
         """Evaluate a logical AND expression."""
-        for operand in expr.operands:
-            if not self._to_bool(self.resolve(operand)):
-                return False
-        return True
+        return all(self._to_bool(self.resolve(operand)) for operand in expr.operands)
 
     def _eval_or(self, expr: Any) -> bool:
         """Evaluate a logical OR expression."""
-        for operand in expr.operands:
-            if self._to_bool(self.resolve(operand)):
-                return True
-        return False
+        return any(self._to_bool(self.resolve(operand)) for operand in expr.operands)
 
     def _eval_not(self, expr: Any) -> bool:
         """Evaluate a logical NOT expression."""
@@ -201,12 +196,10 @@ class WorkflowState:
             return value
         if isinstance(value, str):
             # Empty string is falsy, "false" is falsy (case-insensitive)
-            if value.lower() in ("false", "no", "0", ""):
-                return False
-            return True
+            return value.lower() not in ("false", "no", "0", "")
         if value is None:
             return False
-        if isinstance(value, (int, float)):
+        if isinstance(value, int | float):
             return value != 0
         # Default: truthy if not None
         return bool(value)

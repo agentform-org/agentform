@@ -19,11 +19,7 @@
   <a href="#"><img src="https://img.shields.io/badge/status-alpha-f97316?style=flat-square" alt="Alpha"></a>
 </p>
 
-<br />
-
 ---
-
-<br />
 
 ## Why ACP?
 
@@ -52,17 +48,6 @@ pip install acp-cli
 
 That's it! You're ready to go.
 
-### VS Code Extension (Optional)
-
-For syntax highlighting and code snippets in VS Code, install the [ACP VS Code extension](https://github.com/acp-team/acp-vscode):
-
-```bash
-# From source
-git clone https://github.com/acp-team/acp-vscode.git
-cp -r acp-vscode ~/.vscode/extensions/acp-language
-```
-
-Or install from the VS Code marketplace (coming soon).
 
 ### Verify Installation
 

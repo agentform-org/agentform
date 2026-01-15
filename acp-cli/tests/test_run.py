@@ -3,6 +3,7 @@
 import json
 import tempfile
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 from typer.testing import CliRunner
@@ -135,7 +136,7 @@ class TestPromptForInputs:
         mock_prompt.return_value = "test-value"
 
         required_fields = {"field1", "field2"}
-        existing_input = {}
+        existing_input: dict[str, Any] = {}
 
         result = prompt_for_inputs(required_fields, existing_input)
 
@@ -162,7 +163,7 @@ class TestPromptForInputs:
         mock_prompt.return_value = '{"key": "value"}'
 
         required_fields = {"field1"}
-        existing_input = {}
+        existing_input: dict[str, Any] = {}
 
         result = prompt_for_inputs(required_fields, existing_input)
 
@@ -175,7 +176,7 @@ class TestPromptForInputs:
         mock_prompt.return_value = "42"
 
         required_fields = {"field1"}
-        existing_input = {}
+        existing_input: dict[str, Any] = {}
 
         result = prompt_for_inputs(required_fields, existing_input)
 
@@ -188,7 +189,7 @@ class TestPromptForInputs:
         mock_prompt.return_value = "true"
 
         required_fields = {"field1"}
-        existing_input = {}
+        existing_input: dict[str, Any] = {}
 
         result = prompt_for_inputs(required_fields, existing_input)
 
@@ -201,7 +202,7 @@ class TestPromptForInputs:
         mock_prompt.return_value = "not valid json {"
 
         required_fields = {"field1"}
-        existing_input = {}
+        existing_input: dict[str, Any] = {}
 
         result = prompt_for_inputs(required_fields, existing_input)
 

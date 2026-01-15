@@ -1,6 +1,5 @@
 """Tests for ACP reference resolver."""
 
-import pytest
 
 from acp_compiler.acp_parser import parse_acp
 from acp_compiler.acp_resolver import resolve_references

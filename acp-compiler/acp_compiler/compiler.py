@@ -119,7 +119,6 @@ def compile_acp_file(
     Raises:
         CompilationError: If compilation fails
     """
-    from acp_compiler.acp_parser import ACPParseError
 
     path = Path(path)
 

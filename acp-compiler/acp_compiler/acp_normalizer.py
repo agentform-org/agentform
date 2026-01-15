@@ -8,25 +8,18 @@ from typing import Any
 
 from acp_compiler.acp_ast import (
     ACPFile,
-    AgentBlock,
     AndExpr,
-    CapabilityBlock,
     ComparisonExpr,
     ConditionalExpr,
     EnvCall,
-    ModelBlock,
     NestedBlock,
     NotExpr,
     OrExpr,
-    PolicyBlock,
-    ProviderBlock,
     Reference,
-    ServerBlock,
     SourceLocation,
     StateRef,
     StepBlock,
     Value,
-    WorkflowBlock,
 )
 from acp_compiler.acp_resolver import ResolutionResult
 from acp_schema.models import (
@@ -527,7 +520,7 @@ class ACPNormalizer:
 
     def _value_to_expr(self, value: Value) -> Any:
         """Convert AST value to expression string or primitive.
-        
+
         For expression types (ConditionalExpr, ComparisonExpr, etc.), we convert
         to a string representation that can be evaluated at runtime. Alternatively,
         for static expressions (no state refs), we can evaluate at compile time.
@@ -535,11 +528,7 @@ class ACPNormalizer:
         if isinstance(value, Reference):
             # Convert to $-prefixed expression for runtime
             path = value.path
-            if path.startswith("input."):
-                return f"${path}"
-            elif path.startswith("result."):
-                return f"${path}"
-            elif path.startswith("state."):
+            if path.startswith("input.") or path.startswith("result.") or path.startswith("state."):
                 return f"${path}"
             return path
         elif isinstance(value, StateRef):
@@ -576,9 +565,7 @@ class ACPNormalizer:
             )
         elif isinstance(expr, ComparisonExpr):
             return self._is_static_expr(expr.left) and self._is_static_expr(expr.right)
-        elif isinstance(expr, AndExpr):
-            return all(self._is_static_expr(op) for op in expr.operands)
-        elif isinstance(expr, OrExpr):
+        elif isinstance(expr, (AndExpr, OrExpr)):
             return all(self._is_static_expr(op) for op in expr.operands)
         elif isinstance(expr, NotExpr):
             return self._is_static_expr(expr.operand)
@@ -593,19 +580,17 @@ class ACPNormalizer:
         if isinstance(expr, ComparisonExpr):
             left = self._eval_static_expr(expr.left)
             right = self._eval_static_expr(expr.right)
-            op = expr.operator
-            if op == "==":
-                return left == right
-            elif op == "!=":
-                return left != right
-            elif op == "<":
-                return left < right
-            elif op == ">":
-                return left > right
-            elif op == "<=":
-                return left <= right
-            elif op == ">=":
-                return left >= right
+            ops = {
+                "==": lambda a, b: a == b,
+                "!=": lambda a, b: a != b,
+                "<": lambda a, b: a < b,
+                ">": lambda a, b: a > b,
+                "<=": lambda a, b: a <= b,
+                ">=": lambda a, b: a >= b,
+            }
+            op_func = ops.get(expr.operator)
+            if op_func:
+                return op_func(left, right)
         elif isinstance(expr, AndExpr):
             return all(self._eval_static_expr(op) for op in expr.operands)
         elif isinstance(expr, OrExpr):
@@ -629,9 +614,7 @@ class ACPNormalizer:
         if isinstance(value, bool):
             return value
         if isinstance(value, str):
-            if value.lower() in ("false", "no", "0", ""):
-                return False
-            return True
+            return value.lower() not in ("false", "no", "0", "")
         if value is None:
             return False
         if isinstance(value, (int, float)):

@@ -112,7 +112,7 @@ class TestCompileACPFile:
                 compiled = compile_acp_file(f.name, check_env=False, resolve_credentials=False)
                 assert compiled.project_name == "file-test"
             finally:
-                os.unlink(f.name)
+                Path(f.name).unlink()
 
     def test_file_not_found(self) -> None:
         """Test error when file doesn't exist."""
@@ -157,7 +157,7 @@ class TestValidateACPFile:
                 result = validate_acp_file(f.name, check_env=False)
                 assert result.is_valid
             finally:
-                os.unlink(f.name)
+                Path(f.name).unlink()
 
     def test_returns_errors_for_invalid_file(self) -> None:
         """Test that invalid file returns errors."""
@@ -177,7 +177,7 @@ class TestValidateACPFile:
                 assert not result.is_valid
                 assert len(result.errors) > 0
             finally:
-                os.unlink(f.name)
+                Path(f.name).unlink()
 
 
 class TestUnifiedCompileFile:
@@ -215,7 +215,7 @@ class TestUnifiedCompileFile:
                 compiled = compile_file(f.name, check_env=False, resolve_credentials=False)
                 assert compiled.project_name == "acp-test"
             finally:
-                os.unlink(f.name)
+                Path(f.name).unlink()
 
     def test_compiles_yaml_file(self) -> None:
         """Test that .yaml files are compiled correctly."""
@@ -252,7 +252,7 @@ workflows:
                 compiled = compile_file(f.name, check_env=False, resolve_credentials=False)
                 assert compiled.project_name == "yaml-test"
             finally:
-                os.unlink(f.name)
+                Path(f.name).unlink()
 
     def test_unknown_extension_error(self) -> None:
         """Test error for unknown file extension."""
@@ -266,7 +266,7 @@ workflows:
 
                 assert "Unknown file extension" in str(exc_info.value)
             finally:
-                os.unlink(f.name)
+                Path(f.name).unlink()
 
 
 class TestUnifiedValidateFile:
@@ -304,7 +304,7 @@ class TestUnifiedValidateFile:
                 result = validate_file(f.name, check_env=False)
                 assert result.is_valid
             finally:
-                os.unlink(f.name)
+                Path(f.name).unlink()
 
     def test_validates_yaml_file(self) -> None:
         """Test that .yaml files are validated correctly."""
@@ -341,7 +341,7 @@ workflows:
                 result = validate_file(f.name, check_env=False)
                 assert result.is_valid
             finally:
-                os.unlink(f.name)
+                Path(f.name).unlink()
 
 
 class TestIROutput:
