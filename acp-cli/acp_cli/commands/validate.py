@@ -36,7 +36,9 @@ def _load_variables(
             if isinstance(file_vars, dict):
                 variables.update({k: str(v) for k, v in file_vars.items()})
             else:
-                raise typer.BadParameter(f"Variable file must contain a JSON object: {var_file_path}")
+                raise typer.BadParameter(
+                    f"Variable file must contain a JSON object: {var_file_path}"
+                )
         except json.JSONDecodeError as e:
             raise typer.BadParameter(f"Error parsing variable file {var_file_path}: {e}") from None
 

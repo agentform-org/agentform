@@ -1,6 +1,5 @@
 """End-to-end tests for ACP compiler."""
 
-import os
 import tempfile
 from pathlib import Path
 

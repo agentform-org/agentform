@@ -228,7 +228,12 @@ def run(
 
     if variables and verbose:
         # Mask sensitive values in output
-        display_vars = {k: "***" if "key" in k.lower() or "secret" in k.lower() or "password" in k.lower() else v for k, v in variables.items()}
+        display_vars = {
+            k: "***"
+            if "key" in k.lower() or "secret" in k.lower() or "password" in k.lower()
+            else v
+            for k, v in variables.items()
+        }
         console.print(f"[bold]Variables:[/bold] {display_vars}\n")
 
     # Parse input data

@@ -9,7 +9,6 @@ from dataclasses import dataclass, field
 from acp_compiler.acp_ast import (
     ACPFile,
     AgentBlock,
-    Attribute,
     CapabilityBlock,
     ModelBlock,
     NestedBlock,
@@ -17,7 +16,6 @@ from acp_compiler.acp_ast import (
     Reference,
     SourceLocation,
     StepBlock,
-    VariableBlock,
     VarRef,
     WorkflowBlock,
 )

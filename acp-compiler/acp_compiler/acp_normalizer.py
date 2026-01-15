@@ -68,9 +68,7 @@ class ACPNormalizer:
         self.resolution = resolution
         self.variables = variables or {}
         # Build variable defaults from declarations
-        self._variable_defs: dict[str, VariableBlock] = {
-            v.name: v for v in acp_file.variables
-        }
+        self._variable_defs: dict[str, VariableBlock] = {v.name: v for v in acp_file.variables}
         # Cache for resolved model info
         self._model_cache: dict[str, tuple[str, str, LLMProviderParams | None]] = {}
 
