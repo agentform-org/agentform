@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "acp-cli"
-version = "0.0.0"  # Placeholder - actual version comes from git tags via poetry-dynamic-versioning
+version = "0.1.0"
 description = "CLI interface for ACP"
 authors = ["ACP Team"]
 readme = "README.md"
@@ -47,12 +47,6 @@ acp-mcp = {path = "../acp-mcp", develop = true}
 acp-compiler = {path = "../acp-compiler", develop = true}
 acp-runtime = {path = "../acp-runtime", develop = true}
 
-[tool.poetry-dynamic-versioning]
-enable = true
-vcs = "git"
-style = "pep440"
-pattern = "^v?(?P<base>\\d+\\.\\d+\\.\\d+)"
-
 [build-system]
-requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
-build-backend = "poetry_dynamic_versioning.backend"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -18,17 +18,32 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Full history needed for poetry-dynamic-versioning
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install Poetry and plugins
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: latest
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Extract version from tag
+        id: version
         run: |
-          pip install poetry poetry-dynamic-versioning
+          # Remove 'v' prefix from tag if present (e.g., v0.1.0 -> 0.1.0)
+          VERSION=${GITHUB_REF_NAME#v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Publishing version: $VERSION"
+
+      - name: Update package version
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          sed -i "s/^version = \".*\"/version = \"$VERSION\"/" acp-cli/pyproject.toml
+          echo "Updated acp-cli to version $VERSION"
 
       - name: Bundle all modules into acp-cli
         run: |
@@ -72,7 +87,6 @@ jobs:
       - name: Build package
         working-directory: acp-cli
         run: |
-          echo "Building with version from git tag: $(git describe --tags)"
           poetry build
           echo "Built packages:"
           ls -la dist/
