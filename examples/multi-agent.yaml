@@ -63,7 +63,7 @@ agents:
   - name: deep_analyst
     provider: anthropic
     model:
-      preference: claude-3-5-sonnet-20241022
+      preference: claude-sonnet-4-5-20250929
     params:
       temperature: 0.3
       max_tokens: 4000

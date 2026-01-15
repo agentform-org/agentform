@@ -2,8 +2,9 @@
 
 import asyncio
 import json
+import re
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Set
 
 import typer
 from rich.console import Console
@@ -15,8 +16,82 @@ from acp_compiler import compile_spec_file
 from acp_compiler.compiler import CompilationError
 from acp_runtime import WorkflowEngine
 from acp_runtime.engine import WorkflowError
+from acp_schema.ir import ResolvedWorkflow
 
 console = Console()
+
+
+def extract_input_fields(workflow: ResolvedWorkflow) -> Set[str]:
+    """Extract all $input.field references from a workflow.
+    
+    Args:
+        workflow: The resolved workflow to analyze
+        
+    Returns:
+        Set of input field names (without the $input. prefix)
+    """
+    input_fields: Set[str] = set()
+    pattern = r'\$input\.([a-zA-Z_][a-zA-Z0-9_]*)'
+    
+    for step in workflow.steps.values():
+        # Check input_mapping (for LLM steps)
+        if step.input_mapping:
+            for value in step.input_mapping.values():
+                if isinstance(value, str):
+                    matches = re.findall(pattern, value)
+                    input_fields.update(matches)
+        
+        # Check args_mapping (for call steps)
+        if step.args_mapping:
+            for value in step.args_mapping.values():
+                if isinstance(value, str):
+                    matches = re.findall(pattern, value)
+                    input_fields.update(matches)
+        
+        # Check condition_expr (for condition steps)
+        if step.condition_expr:
+            matches = re.findall(pattern, step.condition_expr)
+            input_fields.update(matches)
+        
+        # Check payload_expr (for human_approval steps)
+        if step.payload_expr:
+            matches = re.findall(pattern, step.payload_expr)
+            input_fields.update(matches)
+    
+    return input_fields
+
+
+def prompt_for_inputs(required_fields: Set[str], existing_input: dict) -> dict:
+    """Prompt user for missing input fields interactively.
+    
+    Args:
+        required_fields: Set of required input field names
+        existing_input: Already provided input data
+        
+    Returns:
+        Dictionary with all inputs (existing + prompted)
+    """
+    result = existing_input.copy()
+    missing_fields = required_fields - set(existing_input.keys())
+    
+    if not missing_fields:
+        return result
+    
+    console.print("\n[bold cyan]Missing required inputs. Please provide them:[/bold cyan]\n")
+    
+    for field in sorted(missing_fields):
+        # Try to parse as JSON first, if that fails, use as string
+        value = typer.prompt(f"  {field}")
+        
+        # Try to parse as JSON (for numbers, booleans, arrays, objects)
+        try:
+            parsed_value = json.loads(value)
+            result[field] = parsed_value
+        except (json.JSONDecodeError, ValueError):
+            # If not valid JSON, use as string
+            result[field] = value
+    
+    return result
 
 
 def run(
@@ -124,6 +199,19 @@ def run(
         console.print(f"[red]Workflow '{workflow}' not found[/red]")
         console.print(f"Available workflows: {available}")
         raise typer.Exit(1)
+
+    # Extract required input fields and prompt if missing
+    workflow_config = compiled.workflows[workflow]
+    required_inputs = extract_input_fields(workflow_config)
+    
+    if required_inputs and not parsed_input:
+        # No input provided at all, prompt for all required fields
+        parsed_input = prompt_for_inputs(required_inputs, {})
+    elif required_inputs:
+        # Some input provided, check for missing fields
+        missing = required_inputs - set(parsed_input.keys())
+        if missing:
+            parsed_input = prompt_for_inputs(required_inputs, parsed_input)
 
     # Execute
     console.print(f"\n[bold]Executing workflow...[/bold]\n")
