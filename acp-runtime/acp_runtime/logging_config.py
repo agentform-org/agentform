@@ -2,6 +2,7 @@
 
 import logging
 import sys
+from typing import Any, cast
 
 import structlog
 
@@ -38,7 +39,7 @@ def configure_logging(verbose: bool = False) -> None:
         processors.append(structlog.processors.JSONRenderer())
 
     structlog.configure(
-        processors=processors,
+        processors=processors,  # type: ignore[arg-type]
         wrapper_class=structlog.make_filtering_bound_logger(log_level),
         context_class=dict,
         logger_factory=structlog.PrintLoggerFactory(),
@@ -55,4 +56,4 @@ def get_logger(name: str | None = None) -> structlog.BoundLogger:
     Returns:
         Configured structlog logger
     """
-    return structlog.get_logger(name)
+    return cast(structlog.BoundLogger, structlog.get_logger(name))

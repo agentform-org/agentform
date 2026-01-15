@@ -3,7 +3,7 @@
 from typing import Any
 
 from langchain_anthropic import ChatAnthropic
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 
 from acp_runtime.logging_config import get_logger
@@ -61,7 +61,7 @@ class LLMExecutor:
             raise LLMError(f"API key for provider '{provider_name}' not resolved")
 
         # Build params
-        llm_params = {
+        llm_params: dict[str, Any] = {
             "model": model,
             "api_key": api_key,
         }
@@ -72,6 +72,7 @@ class LLMExecutor:
             llm_params["max_tokens"] = params["max_tokens"]
 
         # Create LLM based on provider
+        llm: ChatOpenAI | ChatAnthropic
         if provider_name == "openai":
             llm = ChatOpenAI(**llm_params)
         elif provider_name == "anthropic":
@@ -133,7 +134,7 @@ class LLMExecutor:
                 llm = self._get_llm(agent.provider_name, model, params)
 
                 # Build messages
-                messages = []
+                messages: list[BaseMessage] = []
                 if agent.instructions:
                     messages.append(SystemMessage(content=agent.instructions))
                     self._logger.debug(

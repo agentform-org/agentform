@@ -116,7 +116,7 @@ class WorkflowEngine:
                 self._logger.debug("no_mcp_servers", workflow_name=workflow_name)
 
             # Execute steps
-            current_step_id = workflow.entry_step
+            current_step_id: str | None = workflow.entry_step
             final_output = None
             step_count = 0
 

@@ -2,7 +2,7 @@
 
 import asyncio
 import os
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import anyio
 
@@ -151,7 +151,8 @@ class MCPServerManager:
             "capabilities": {},
             "clientInfo": {"name": "acp", "version": "0.1.0"},
         }
-        return await self.send_request("initialize", params)
+        result = await self.send_request("initialize", params)
+        return cast(dict[str, Any], result)
 
     async def list_tools(self) -> list[MCPMethod]:
         """List available tools from the server."""

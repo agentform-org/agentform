@@ -97,15 +97,15 @@ def generate_ir(spec: SpecRoot, resolve_credentials: bool = True) -> CompiledSpe
     agents: dict[str, ResolvedAgent] = {}
     for agent in spec.agents:
         # Merge provider defaults with agent params
-        provider = providers.get(agent.provider)
-        if not provider:
+        resolved_provider = providers.get(agent.provider)
+        if resolved_provider is None:
             raise IRGenerationError(
                 f"Provider '{agent.provider}' not found for agent '{agent.name}'"
             )
 
         merged_params = LLMProviderParams()
-        if provider.default_params:
-            merged_params = provider.default_params.model_copy()
+        if resolved_provider.default_params:
+            merged_params = resolved_provider.default_params.model_copy()
         if agent.params:
             # Override with agent-specific params
             for field_name in agent.params.model_fields:
