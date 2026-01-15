@@ -6,6 +6,7 @@ from acp_runtime.policy import PolicyEnforcer, PolicyViolation, PolicyContext
 from acp_runtime.approval import ApprovalHandler, CLIApprovalHandler, AutoApprovalHandler
 from acp_runtime.tracing import Tracer, TraceEvent, EventType
 from acp_runtime.llm import LLMExecutor, LLMError
+from acp_runtime.logging_config import configure_logging, get_logger
 
 __all__ = [
     "WorkflowEngine",
@@ -22,4 +23,6 @@ __all__ = [
     "EventType",
     "LLMExecutor",
     "LLMError",
+    "configure_logging",
+    "get_logger",
 ]

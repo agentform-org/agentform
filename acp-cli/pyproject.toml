@@ -17,6 +17,7 @@ acp-compiler = {path = "../acp-compiler", develop = true}
 acp-runtime = {path = "../acp-runtime", develop = true}
 typer = ">=0.12,<1.0"
 rich = "^13.7"
+structlog = "^24.1.0"
 
 [build-system]
 requires = ["poetry-core"]

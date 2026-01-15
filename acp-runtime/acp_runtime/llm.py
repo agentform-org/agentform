@@ -7,6 +7,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 
 from acp_schema.ir import ResolvedAgent, ResolvedProvider
+from acp_runtime.logging_config import get_logger
 
 
 class LLMError(Exception):
@@ -18,14 +19,17 @@ class LLMError(Exception):
 class LLMExecutor:
     """Executes LLM calls using LangChain."""
 
-    def __init__(self, providers: dict[str, ResolvedProvider]):
+    def __init__(self, providers: dict[str, ResolvedProvider], verbose: bool = False):
         """Initialize LLM executor.
 
         Args:
             providers: Resolved provider configurations
+            verbose: Enable verbose logging
         """
         self._providers = providers
         self._llm_cache: dict[str, Any] = {}
+        self._verbose = verbose
+        self._logger = get_logger("acp_runtime.llm")
 
     def _get_llm(self, provider_name: str, model: str, params: dict[str, Any]) -> Any:
         """Get or create an LLM instance.
@@ -43,7 +47,10 @@ class LLMExecutor:
         """
         cache_key = f"{provider_name}:{model}"
         if cache_key in self._llm_cache:
+            self._logger.debug("llm_cache_hit", provider=provider_name, model=model)
             return self._llm_cache[cache_key]
+
+        self._logger.debug("llm_creation_start", provider=provider_name, model=model, params=params)
 
         provider = self._providers.get(provider_name)
         if not provider:
@@ -73,6 +80,7 @@ class LLMExecutor:
             raise LLMError(f"Unsupported provider: {provider_name}")
 
         self._llm_cache[cache_key] = llm
+        self._logger.debug("llm_creation_complete", provider=provider_name, model=model)
         return llm
 
     async def execute(
@@ -92,6 +100,16 @@ class LLMExecutor:
         Raises:
             LLMError: If execution fails
         """
+        self._logger.info(
+            "llm_execution_start",
+            agent_name=agent.name if hasattr(agent, 'name') else "unknown",
+            provider=agent.provider_name,
+            model_preference=agent.model_preference,
+            model_fallback=agent.model_fallback,
+            has_instructions=bool(agent.instructions),
+            input_keys=list(input_data.keys()) if input_data else [],
+        )
+
         # Get params
         params = {}
         if agent.params:
@@ -99,21 +117,26 @@ class LLMExecutor:
                 "temperature": agent.params.temperature,
                 "max_tokens": agent.params.max_tokens,
             }
+            self._logger.debug("llm_params", params=params)
 
         # Try preferred model first, then fallback
         models_to_try = [agent.model_preference]
         if agent.model_fallback:
             models_to_try.append(agent.model_fallback)
 
+        self._logger.debug("llm_models_to_try", models=models_to_try)
+
         last_error: Exception | None = None
         for model in models_to_try:
             try:
+                self._logger.info("llm_model_attempt", model=model, provider=agent.provider_name)
                 llm = self._get_llm(agent.provider_name, model, params)
 
                 # Build messages
                 messages = []
                 if agent.instructions:
                     messages.append(SystemMessage(content=agent.instructions))
+                    self._logger.debug("llm_system_message_added", instruction_length=len(agent.instructions))
 
                 # Format input as user message
                 if input_data:
@@ -121,22 +144,50 @@ class LLMExecutor:
 
                     input_str = json.dumps(input_data, indent=2)
                     messages.append(HumanMessage(content=f"Input:\n{input_str}"))
+                    self._logger.debug("llm_input_message_added", input_length=len(input_str))
                 else:
                     messages.append(HumanMessage(content="Please proceed with your task."))
+                    self._logger.debug("llm_empty_input_message_added")
 
                 # Execute
+                self._logger.debug("llm_invoke_start", model=model, message_count=len(messages))
                 response = await llm.ainvoke(messages)
+                self._logger.debug("llm_invoke_complete", model=model, response_length=len(response.content) if response.content else 0)
 
-                return {
+                usage = getattr(response, "usage_metadata", None)
+                result = {
                     "response": response.content,
                     "model": model,
                     "provider": agent.provider_name,
-                    "usage": getattr(response, "usage_metadata", None),
+                    "usage": usage,
                 }
 
+                self._logger.info(
+                    "llm_execution_success",
+                    model=model,
+                    provider=agent.provider_name,
+                    response_length=len(response.content) if response.content else 0,
+                    usage=usage,
+                )
+
+                return result
+
             except Exception as e:
+                self._logger.warning(
+                    "llm_model_failed",
+                    model=model,
+                    provider=agent.provider_name,
+                    error=str(e),
+                    error_type=type(e).__name__,
+                )
                 last_error = e
                 continue
 
+        self._logger.error(
+            "llm_execution_failed_all_models",
+            models_tried=models_to_try,
+            last_error=str(last_error) if last_error else None,
+            last_error_type=type(last_error).__name__ if last_error else None,
+        )
         raise LLMError(f"All models failed. Last error: {last_error}")
 
