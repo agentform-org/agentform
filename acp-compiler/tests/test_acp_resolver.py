@@ -12,12 +12,15 @@ class TestSymbolTableBuilding:
         content = """
         acp { version = "0.1" project = "test" }
 
+        variable "openai_api_key" { default = "env:OPENAI_API_KEY" }
+        variable "anthropic_api_key" { default = "env:ANTHROPIC_API_KEY" }
+
         provider "llm.openai" "default" {
-            api_key = env("OPENAI_API_KEY")
+            api_key = var.openai_api_key
         }
 
         provider "llm.anthropic" "default" {
-            api_key = env("ANTHROPIC_API_KEY")
+            api_key = var.anthropic_api_key
         }
         """
         acp_file = parse_acp(content)
@@ -94,12 +97,15 @@ class TestDuplicateDetection:
         content = """
         acp { version = "0.1" project = "test" }
 
+        variable "key1" { default = "env:KEY1" }
+        variable "key2" { default = "env:KEY2" }
+
         provider "llm.openai" "default" {
-            api_key = env("KEY1")
+            api_key = var.key1
         }
 
         provider "llm.openai" "default" {
-            api_key = env("KEY2")
+            api_key = var.key2
         }
         """
         acp_file = parse_acp(content)
@@ -155,8 +161,10 @@ class TestReferenceResolution:
         content = """
         acp { version = "0.1" project = "test" }
 
+        variable "openai_api_key" { default = "env:OPENAI_API_KEY" }
+
         provider "llm.openai" "default" {
-            api_key = env("OPENAI_API_KEY")
+            api_key = var.openai_api_key
         }
 
         model "gpt4" {
@@ -246,8 +254,10 @@ class TestFullResolution:
         content = """
         acp { version = "0.1" project = "test" }
 
+        variable "openai_api_key" { default = "env:OPENAI_API_KEY" }
+
         provider "llm.openai" "default" {
-            api_key = env("OPENAI_API_KEY")
+            api_key = var.openai_api_key
         }
 
         policy "default" {

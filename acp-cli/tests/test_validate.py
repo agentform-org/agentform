@@ -99,8 +99,14 @@ acp {
   project = "full-test"
 }
 
+variable "openai_api_key" {
+  type = string
+  default = "sk-test"
+  sensitive = true
+}
+
 provider "llm.openai" "default" {
-  api_key = env("OPENAI_API_KEY")
+  api_key = var.openai_api_key
 }
 
 policy "default" {

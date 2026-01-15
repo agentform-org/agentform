@@ -38,8 +38,13 @@ acp {
   project = "full-test"
 }
 
+variable "openai_api_key" {
+  default = "env:OPENAI_API_KEY"
+  sensitive = true
+}
+
 provider "llm.openai" "default" {
-  api_key = env("OPENAI_API_KEY")
+  api_key = var.openai_api_key
   default_params {
     temperature = 0.7
   }
@@ -125,8 +130,13 @@ acp {
   project = "all-steps"
 }
 
+variable "openai_api_key" {
+  default = "env:OPENAI_API_KEY"
+  sensitive = true
+}
+
 provider "llm.openai" "default" {
-  api_key = env("OPENAI_API_KEY")
+  api_key = var.openai_api_key
 }
 
 server "fs" {
@@ -209,8 +219,13 @@ acp {
   project = "file-test"
 }
 
+variable "openai_api_key" {
+  default = "env:OPENAI_API_KEY"
+  sensitive = true
+}
+
 provider "llm.openai" "default" {
-  api_key = env("OPENAI_API_KEY")
+  api_key = var.openai_api_key
 }
 
 model "gpt4" {

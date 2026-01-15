@@ -417,13 +417,14 @@ class TestGenerateIR:
         assert approve_step.on_approve_step == "apply"
         assert approve_step.on_reject_step == "cancel"
 
-    def test_invalid_api_key_format_raises(self):
-        """Test that invalid API key format raises error."""
+    def test_direct_api_key_allowed(self):
+        """Test that direct API keys (from variable substitution) are allowed."""
         spec = SpecRoot(
             project=ProjectConfig(name="test"),
             providers=ProvidersConfig(llm={"openai": LLMProviderConfig(api_key="plain-text-key")}),
         )
 
-        with pytest.raises(IRGenerationError) as exc_info:
-            generate_ir(spec, resolve_credentials=False)
-        assert "Invalid API key format" in str(exc_info.value)
+        # Direct values are allowed - they come from variable substitution
+        ir = generate_ir(spec, resolve_credentials=False)
+        assert ir.providers["openai"].api_key.value == "plain-text-key"
+        assert ir.providers["openai"].api_key.env_var == "DIRECT_VALUE"

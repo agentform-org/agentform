@@ -14,8 +14,10 @@ class TestProviderNormalization:
         content = """
         acp { version = "0.1" project = "test" }
 
+        variable "openai_api_key" { default = "env:OPENAI_API_KEY" }
+
         provider "llm.openai" "default" {
-            api_key = env("OPENAI_API_KEY")
+            api_key = var.openai_api_key
         }
         """
         acp_file = parse_acp(content)
@@ -31,8 +33,10 @@ class TestProviderNormalization:
         content = """
         acp { version = "0.1" project = "test" }
 
+        variable "openai_prod_key" { default = "env:OPENAI_PROD_KEY" }
+
         provider "llm.openai" "production" {
-            api_key = env("OPENAI_PROD_KEY")
+            api_key = var.openai_prod_key
         }
         """
         acp_file = parse_acp(content)
@@ -50,8 +54,10 @@ class TestModelNormalization:
         content = """
         acp { version = "0.1" project = "test" }
 
+        variable "openai_api_key" { default = "env:OPENAI_API_KEY" }
+
         provider "llm.openai" "default" {
-            api_key = env("OPENAI_API_KEY")
+            api_key = var.openai_api_key
         }
 
         model "gpt4" {
@@ -88,8 +94,10 @@ class TestModelNormalization:
         content = """
         acp { version = "0.1" project = "test" }
 
+        variable "openai_api_key" { default = "env:OPENAI_API_KEY" }
+
         provider "llm.openai" "default" {
-            api_key = env("OPENAI_API_KEY")
+            api_key = var.openai_api_key
         }
 
         model "gpt4" {
@@ -214,8 +222,10 @@ class TestWorkflowNormalization:
         content = """
         acp { version = "0.1" project = "test" }
 
+        variable "api_key" { default = "env:KEY" }
+
         provider "llm.openai" "default" {
-            api_key = env("KEY")
+            api_key = var.api_key
         }
 
         model "gpt4" {
@@ -345,8 +355,10 @@ class TestFullNormalization:
         content = """
         acp { version = "0.2" project = "complete-test" }
 
+        variable "openai_api_key" { default = "env:OPENAI_API_KEY" }
+
         provider "llm.openai" "default" {
-            api_key = env("OPENAI_API_KEY")
+            api_key = var.openai_api_key
         }
 
         policy "default" {

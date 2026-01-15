@@ -95,8 +95,8 @@ class TestValidateSpec:
         result = validate_spec(spec, check_env=True)
         assert result.is_valid is True
 
-    def test_invalid_api_key_format(self):
-        """Test that non-env API key is rejected."""
+    def test_direct_api_key_allowed(self):
+        """Test that direct API keys (from variable substitution) are allowed."""
         spec = SpecRoot(
             project=ProjectConfig(name="test"),
             providers=ProvidersConfig(
@@ -105,8 +105,8 @@ class TestValidateSpec:
         )
 
         result = validate_spec(spec, check_env=False)
-        assert result.is_valid is False
-        assert any("environment variable reference" in e.message for e in result.errors)
+        # Direct values are allowed - they come from variable substitution
+        assert result.is_valid is True
 
     def test_capability_references_unknown_server(self):
         """Test that capability referencing unknown server is rejected."""

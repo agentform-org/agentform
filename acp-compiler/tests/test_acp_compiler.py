@@ -401,7 +401,7 @@ class TestIROutput:
             content,
             check_env=False,
             resolve_credentials=False,
-            variables={"openai_api_key": "test-key"},
+            variables={"openai_api_key": "env:OPENAI_API_KEY"},
         )
 
         # Check structure
