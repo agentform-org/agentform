@@ -31,13 +31,13 @@ class TestBasicParsing:
 
     def test_parse_provider_block(self) -> None:
         """Test parsing a provider block."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         provider "llm.openai" "default" {
             api_key = env("OPENAI_API_KEY")
         }
-        '''
+        """
         result = parse_acp(content)
 
         assert len(result.providers) == 1
@@ -52,7 +52,7 @@ class TestBasicParsing:
 
     def test_parse_model_block(self) -> None:
         """Test parsing a model block."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         model "gpt4" {
@@ -63,7 +63,7 @@ class TestBasicParsing:
                 max_tokens = 2000
             }
         }
-        '''
+        """
         result = parse_acp(content)
 
         assert len(result.models) == 1
@@ -84,7 +84,7 @@ class TestBasicParsing:
 
     def test_parse_agent_block(self) -> None:
         """Test parsing an agent block."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         agent "assistant" {
@@ -93,7 +93,7 @@ class TestBasicParsing:
             instructions = "Answer clearly."
             policy = policy.default
         }
-        '''
+        """
         result = parse_acp(content)
 
         assert len(result.agents) == 1
@@ -115,7 +115,7 @@ class TestBasicParsing:
 
     def test_parse_workflow_block(self) -> None:
         """Test parsing a workflow block with steps."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         workflow "ask" {
@@ -131,7 +131,7 @@ class TestBasicParsing:
 
             step "end" { type = "end" }
         }
-        '''
+        """
         result = parse_acp(content)
 
         assert len(result.workflows) == 1
@@ -171,16 +171,16 @@ class TestValueParsing:
 
     def test_parse_string_value(self) -> None:
         """Test parsing string values."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test project" }
-        '''
+        """
         result = parse_acp(content)
         assert result.acp is not None
         assert result.acp.project == "test project"
 
     def test_parse_number_values(self) -> None:
         """Test parsing integer and float values."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         model "test" {
@@ -192,7 +192,7 @@ class TestValueParsing:
                 top_p = 0.95
             }
         }
-        '''
+        """
         result = parse_acp(content)
         params = result.models[0].get_params_block()
         assert params is not None
@@ -202,7 +202,7 @@ class TestValueParsing:
 
     def test_parse_boolean_values(self) -> None:
         """Test parsing boolean values."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         capability "write_file" {
@@ -211,21 +211,21 @@ class TestValueParsing:
             side_effect = "write"
             requires_approval = true
         }
-        '''
+        """
         result = parse_acp(content)
         cap = result.capabilities[0]
         assert cap.get_attribute("requires_approval") is True
 
     def test_parse_array_values(self) -> None:
         """Test parsing array values."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         server "fs" {
             command = ["npx", "server", "/path"]
             transport = "stdio"
         }
-        '''
+        """
         result = parse_acp(content)
         server = result.servers[0]
         command = server.get_attribute("command")
@@ -234,7 +234,7 @@ class TestValueParsing:
 
     def test_parse_reference_values(self) -> None:
         """Test parsing reference values."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         agent "test" {
@@ -242,7 +242,7 @@ class TestValueParsing:
             policy = policy.default
             instructions = "test"
         }
-        '''
+        """
         result = parse_acp(content)
         agent = result.agents[0]
 
@@ -252,13 +252,13 @@ class TestValueParsing:
 
     def test_parse_env_call(self) -> None:
         """Test parsing env() function calls."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         provider "llm.anthropic" "default" {
             api_key = env("ANTHROPIC_API_KEY")
         }
-        '''
+        """
         result = parse_acp(content)
         provider = result.providers[0]
         api_key = provider.get_attribute("api_key")
@@ -271,14 +271,14 @@ class TestNestedBlocks:
 
     def test_parse_unlabeled_nested_block(self) -> None:
         """Test parsing nested blocks without labels."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         policy "default" {
             budgets { max_cost_usd_per_run = 0.50 }
             budgets { timeout_seconds = 60 }
         }
-        '''
+        """
         result = parse_acp(content)
         policy = result.policies[0]
         budget_blocks = policy.get_budgets_blocks()
@@ -286,7 +286,7 @@ class TestNestedBlocks:
 
     def test_parse_labeled_nested_block(self) -> None:
         """Test parsing nested blocks with labels."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         workflow "test" {
@@ -299,7 +299,7 @@ class TestNestedBlocks:
             }
             step "end" { type = "end" }
         }
-        '''
+        """
         result = parse_acp(content)
         step = result.workflows[0].steps[0]
         outputs = step.get_output_blocks()
@@ -312,21 +312,21 @@ class TestComments:
 
     def test_line_comments(self) -> None:
         """Test that line comments are ignored."""
-        content = '''
+        content = """
         // This is a comment
         acp {
             version = "0.1"  // inline comment
             project = "test"
         }
         // Another comment
-        '''
+        """
         result = parse_acp(content)
         assert result.acp is not None
         assert result.acp.version == "0.1"
 
     def test_block_comments(self) -> None:
         """Test that block comments are ignored."""
-        content = '''
+        content = """
         /* Block comment */
         acp {
             version = "0.1"
@@ -335,7 +335,7 @@ class TestComments:
                comment */
             project = "test"
         }
-        '''
+        """
         result = parse_acp(content)
         assert result.acp is not None
         assert result.acp.project == "test"
@@ -346,25 +346,25 @@ class TestParseErrors:
 
     def test_missing_closing_brace(self) -> None:
         """Test error on missing closing brace."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test"
-        '''
+        """
         with pytest.raises(ACPParseError):
             parse_acp(content)
 
     def test_invalid_token(self) -> None:
         """Test error on invalid token."""
-        content = '''
+        content = """
         acp { version = @invalid }
-        '''
+        """
         with pytest.raises(ACPParseError):
             parse_acp(content)
 
     def test_missing_equals(self) -> None:
         """Test error on missing equals sign."""
-        content = '''
+        content = """
         acp { version "0.1" }
-        '''
+        """
         with pytest.raises(ACPParseError):
             parse_acp(content)
 
@@ -374,7 +374,7 @@ class TestFullExample:
 
     def test_parse_full_example(self) -> None:
         """Test parsing the example from the PRD."""
-        content = '''
+        content = """
         acp {
             version = "0.2"
             project = "models-demo"
@@ -427,7 +427,7 @@ class TestFullExample:
 
             step "end" { type = "end" }
         }
-        '''
+        """
         result = parse_acp(content)
 
         assert result.acp is not None
@@ -446,13 +446,13 @@ class TestConditionalExpressions:
 
     def test_parse_simple_conditional(self) -> None:
         """Test parsing a simple conditional expression."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
         model "gpt4" {
             provider = provider.llm.openai.default
             id = $input.use_mini ? "gpt-4o-mini" : "gpt-4o"
         }
-        '''
+        """
         result = parse_acp(content)
         model = result.models[0]
         model_id = model.get_attribute("id")
@@ -465,13 +465,13 @@ class TestConditionalExpressions:
 
     def test_parse_conditional_with_comparison(self) -> None:
         """Test parsing conditional with comparison in condition."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
         model "gpt4" {
             provider = provider.llm.openai.default
             id = $input.env == "prod" ? "gpt-4o" : "gpt-4o-mini"
         }
-        '''
+        """
         result = parse_acp(content)
         model = result.models[0]
         model_id = model.get_attribute("id")
@@ -485,7 +485,7 @@ class TestConditionalExpressions:
 
     def test_parse_conditional_with_number_values(self) -> None:
         """Test parsing conditional with numeric values."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
         model "gpt4" {
             provider = provider.llm.openai.default
@@ -493,7 +493,7 @@ class TestConditionalExpressions:
                 temperature = $input.creative ? 0.9 : 0.1
             }
         }
-        '''
+        """
         result = parse_acp(content)
         model = result.models[0]
         params = model.get_params_block()
@@ -505,13 +505,13 @@ class TestConditionalExpressions:
 
     def test_parse_logical_and_expression(self) -> None:
         """Test parsing logical AND expressions."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
         model "gpt4" {
             provider = provider.llm.openai.default
             enabled = $input.flag1 && $input.flag2
         }
-        '''
+        """
         result = parse_acp(content)
         model = result.models[0]
         enabled = model.get_attribute("enabled")
@@ -523,13 +523,13 @@ class TestConditionalExpressions:
 
     def test_parse_logical_or_expression(self) -> None:
         """Test parsing logical OR expressions."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
         model "gpt4" {
             provider = provider.llm.openai.default
             enabled = $input.flag1 || $input.flag2
         }
-        '''
+        """
         result = parse_acp(content)
         model = result.models[0]
         enabled = model.get_attribute("enabled")
@@ -539,13 +539,13 @@ class TestConditionalExpressions:
 
     def test_parse_logical_not_expression(self) -> None:
         """Test parsing logical NOT expressions."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
         model "gpt4" {
             provider = provider.llm.openai.default
             disabled = !$input.enabled
         }
-        '''
+        """
         result = parse_acp(content)
         model = result.models[0]
         disabled = model.get_attribute("disabled")
@@ -555,7 +555,7 @@ class TestConditionalExpressions:
 
     def test_parse_comparison_operators(self) -> None:
         """Test parsing various comparison operators."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
         model "gpt4" {
             provider = provider.llm.openai.default
@@ -565,7 +565,7 @@ class TestConditionalExpressions:
             lte = $input.count <= 10
             ne = $input.status != "error"
         }
-        '''
+        """
         result = parse_acp(content)
         model = result.models[0]
 
@@ -591,13 +591,13 @@ class TestConditionalExpressions:
 
     def test_parse_nested_conditional(self) -> None:
         """Test parsing nested conditional expressions."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
         model "gpt4" {
             provider = provider.llm.openai.default
             id = $input.tier == "premium" ? "gpt-4o" : ($input.tier == "standard" ? "gpt-4o-mini" : "gpt-3.5")
         }
-        '''
+        """
         result = parse_acp(content)
         model = result.models[0]
         model_id = model.get_attribute("id")
@@ -608,7 +608,7 @@ class TestConditionalExpressions:
 
     def test_parse_state_ref_in_condition_step(self) -> None:
         """Test parsing state references in condition step."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
         workflow "test" {
             entry = step.check
@@ -621,7 +621,7 @@ class TestConditionalExpressions:
             step "success" { type = "end" }
             step "failure" { type = "end" }
         }
-        '''
+        """
         result = parse_acp(content)
         workflow = result.workflows[0]
         step = workflow.steps[0]
@@ -630,4 +630,3 @@ class TestConditionalExpressions:
         assert isinstance(condition, ComparisonExpr)
         assert isinstance(condition.left, StateRef)
         assert condition.left.path == "$state.result.status"
-

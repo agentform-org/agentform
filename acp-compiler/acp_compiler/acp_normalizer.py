@@ -408,7 +408,9 @@ class ACPNormalizer:
         condition: str | None = None
         if isinstance(condition_val, str):
             condition = condition_val
-        elif isinstance(condition_val, (ConditionalExpr, ComparisonExpr, AndExpr, OrExpr, NotExpr, StateRef)):
+        elif isinstance(
+            condition_val, (ConditionalExpr, ComparisonExpr, AndExpr, OrExpr, NotExpr, StateRef)
+        ):
             # Convert expression AST to string for runtime evaluation
             condition = self._expr_to_string(condition_val)
 
@@ -680,4 +682,3 @@ def normalize_acp(acp_file: ACPFile, resolution: ResolutionResult) -> SpecRoot:
     """
     normalizer = ACPNormalizer(acp_file, resolution)
     return normalizer.normalize()
-

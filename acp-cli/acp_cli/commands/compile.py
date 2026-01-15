@@ -116,4 +116,3 @@ def _strip_credential_values(ir_dict: dict) -> None:
     for server in ir_dict.get("servers", {}).values():
         if "auth_token" in server and isinstance(server["auth_token"], dict):
             server["auth_token"]["value"] = None
-

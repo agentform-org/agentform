@@ -230,8 +230,7 @@ def compile_file(
 
     if not _is_acp_file(path):
         raise CompilationError(
-            f"Expected .acp file, got: {path.suffix}. "
-            f"Only .acp files are supported."
+            f"Expected .acp file, got: {path.suffix}. " f"Only .acp files are supported."
         )
 
     return compile_acp_file(path, check_env, resolve_credentials)
@@ -254,8 +253,7 @@ def validate_file(path: str | Path, check_env: bool = True) -> ValidationResult:
 
     if not _is_acp_file(path):
         raise CompilationError(
-            f"Expected .acp file, got: {path.suffix}. "
-            f"Only .acp files are supported."
+            f"Expected .acp file, got: {path.suffix}. " f"Only .acp files are supported."
         )
 
     return validate_acp_file(path, check_env)

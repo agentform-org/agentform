@@ -1,6 +1,5 @@
 """Tests for ACP validator."""
 
-
 from acp_compiler.acp_parser import parse_acp
 from acp_compiler.acp_resolver import resolve_references
 from acp_compiler.acp_validator import validate_acp
@@ -11,11 +10,11 @@ class TestACPBlockValidation:
 
     def test_missing_acp_block(self) -> None:
         """Test error when acp block is missing."""
-        content = '''
+        content = """
         provider "llm.openai" "default" {
             api_key = env("KEY")
         }
-        '''
+        """
         acp_file = parse_acp(content)
         resolution = resolve_references(acp_file)
         result = validate_acp(acp_file, resolution, check_env=False)
@@ -25,9 +24,9 @@ class TestACPBlockValidation:
 
     def test_missing_version(self) -> None:
         """Test error when version is missing."""
-        content = '''
+        content = """
         acp { project = "test" }
-        '''
+        """
         acp_file = parse_acp(content)
         resolution = resolve_references(acp_file)
         result = validate_acp(acp_file, resolution, check_env=False)
@@ -37,9 +36,9 @@ class TestACPBlockValidation:
 
     def test_missing_project(self) -> None:
         """Test error when project is missing."""
-        content = '''
+        content = """
         acp { version = "0.1" }
-        '''
+        """
         acp_file = parse_acp(content)
         resolution = resolve_references(acp_file)
         result = validate_acp(acp_file, resolution, check_env=False)
@@ -53,12 +52,12 @@ class TestProviderValidation:
 
     def test_missing_api_key(self) -> None:
         """Test error when api_key is missing."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         provider "llm.openai" "default" {
         }
-        '''
+        """
         acp_file = parse_acp(content)
         resolution = resolve_references(acp_file)
         result = validate_acp(acp_file, resolution, check_env=False)
@@ -68,13 +67,13 @@ class TestProviderValidation:
 
     def test_api_key_must_use_env(self) -> None:
         """Test error when api_key doesn't use env()."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         provider "llm.openai" "default" {
             api_key = "hardcoded-key"
         }
-        '''
+        """
         acp_file = parse_acp(content)
         resolution = resolve_references(acp_file)
         result = validate_acp(acp_file, resolution, check_env=False)
@@ -88,13 +87,13 @@ class TestModelValidation:
 
     def test_missing_provider(self) -> None:
         """Test error when provider is missing."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         model "gpt4" {
             id = "gpt-4o"
         }
-        '''
+        """
         acp_file = parse_acp(content)
         resolution = resolve_references(acp_file)
         result = validate_acp(acp_file, resolution, check_env=False)
@@ -104,13 +103,13 @@ class TestModelValidation:
 
     def test_missing_id(self) -> None:
         """Test error when id is missing."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         model "gpt4" {
             provider = provider.llm.openai.default
         }
-        '''
+        """
         acp_file = parse_acp(content)
         resolution = resolve_references(acp_file)
         result = validate_acp(acp_file, resolution, check_env=False)
@@ -124,13 +123,13 @@ class TestAgentValidation:
 
     def test_missing_model(self) -> None:
         """Test error when model is missing."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         agent "assistant" {
             instructions = "test"
         }
-        '''
+        """
         acp_file = parse_acp(content)
         resolution = resolve_references(acp_file)
         result = validate_acp(acp_file, resolution, check_env=False)
@@ -140,13 +139,13 @@ class TestAgentValidation:
 
     def test_missing_instructions(self) -> None:
         """Test error when instructions is missing."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         agent "assistant" {
             model = model.gpt4
         }
-        '''
+        """
         acp_file = parse_acp(content)
         resolution = resolve_references(acp_file)
         result = validate_acp(acp_file, resolution, check_env=False)
@@ -160,13 +159,13 @@ class TestWorkflowValidation:
 
     def test_missing_entry(self) -> None:
         """Test error when entry is missing."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         workflow "ask" {
             step "process" { type = "end" }
         }
-        '''
+        """
         acp_file = parse_acp(content)
         resolution = resolve_references(acp_file)
         result = validate_acp(acp_file, resolution, check_env=False)
@@ -176,13 +175,13 @@ class TestWorkflowValidation:
 
     def test_empty_workflow(self) -> None:
         """Test error when workflow has no steps."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         workflow "ask" {
             entry = step.process
         }
-        '''
+        """
         acp_file = parse_acp(content)
         resolution = resolve_references(acp_file)
         result = validate_acp(acp_file, resolution, check_env=False)
@@ -196,7 +195,7 @@ class TestStepValidation:
 
     def test_missing_step_type(self) -> None:
         """Test error when step type is missing."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         workflow "ask" {
@@ -205,7 +204,7 @@ class TestStepValidation:
                 agent = agent.test
             }
         }
-        '''
+        """
         acp_file = parse_acp(content)
         resolution = resolve_references(acp_file)
         result = validate_acp(acp_file, resolution, check_env=False)
@@ -215,7 +214,7 @@ class TestStepValidation:
 
     def test_invalid_step_type(self) -> None:
         """Test error when step type is invalid."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         workflow "ask" {
@@ -224,7 +223,7 @@ class TestStepValidation:
                 type = "invalid_type"
             }
         }
-        '''
+        """
         acp_file = parse_acp(content)
         resolution = resolve_references(acp_file)
         result = validate_acp(acp_file, resolution, check_env=False)
@@ -234,7 +233,7 @@ class TestStepValidation:
 
     def test_llm_step_requires_agent(self) -> None:
         """Test error when LLM step has no agent."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         workflow "ask" {
@@ -243,7 +242,7 @@ class TestStepValidation:
                 type = "llm"
             }
         }
-        '''
+        """
         acp_file = parse_acp(content)
         resolution = resolve_references(acp_file)
         result = validate_acp(acp_file, resolution, check_env=False)
@@ -253,7 +252,7 @@ class TestStepValidation:
 
     def test_call_step_requires_capability(self) -> None:
         """Test error when call step has no capability."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         workflow "ask" {
@@ -262,7 +261,7 @@ class TestStepValidation:
                 type = "call"
             }
         }
-        '''
+        """
         acp_file = parse_acp(content)
         resolution = resolve_references(acp_file)
         result = validate_acp(acp_file, resolution, check_env=False)
@@ -272,7 +271,7 @@ class TestStepValidation:
 
     def test_condition_step_requires_condition(self) -> None:
         """Test error when condition step has no condition."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         workflow "ask" {
@@ -285,7 +284,7 @@ class TestStepValidation:
             step "a" { type = "end" }
             step "b" { type = "end" }
         }
-        '''
+        """
         acp_file = parse_acp(content)
         resolution = resolve_references(acp_file)
         result = validate_acp(acp_file, resolution, check_env=False)
@@ -299,7 +298,7 @@ class TestValidSpec:
 
     def test_valid_minimal_spec(self) -> None:
         """Test that a minimal valid spec passes."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         provider "llm.openai" "default" {
@@ -325,7 +324,7 @@ class TestValidSpec:
             }
             step "end" { type = "end" }
         }
-        '''
+        """
         acp_file = parse_acp(content)
         resolution = resolve_references(acp_file)
         result = validate_acp(acp_file, resolution, check_env=False)
@@ -335,7 +334,7 @@ class TestValidSpec:
 
     def test_valid_complete_spec(self) -> None:
         """Test that a complete valid spec passes."""
-        content = '''
+        content = """
         acp { version = "0.2" project = "complete-test" }
 
         provider "llm.openai" "default" {
@@ -385,11 +384,10 @@ class TestValidSpec:
             }
             step "end" { type = "end" }
         }
-        '''
+        """
         acp_file = parse_acp(content)
         resolution = resolve_references(acp_file)
         result = validate_acp(acp_file, resolution, check_env=False)
 
         assert result.is_valid
         assert len(result.errors) == 0
-

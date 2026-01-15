@@ -471,4 +471,3 @@ def validate_acp(
     """
     validator = ACPValidator(acp_file, resolution, check_env)
     return validator.validate()
-

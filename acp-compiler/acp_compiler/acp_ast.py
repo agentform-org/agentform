@@ -453,4 +453,3 @@ class ACPFile(ASTNode):
             if capability.name == name:
                 return capability
         return None
-

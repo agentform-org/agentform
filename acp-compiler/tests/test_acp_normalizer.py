@@ -1,6 +1,5 @@
 """Tests for ACP normalizer."""
 
-
 from acp_compiler.acp_normalizer import normalize_acp
 from acp_compiler.acp_parser import parse_acp
 from acp_compiler.acp_resolver import resolve_references
@@ -12,13 +11,13 @@ class TestProviderNormalization:
 
     def test_normalizes_provider(self) -> None:
         """Test that providers are normalized correctly."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         provider "llm.openai" "default" {
             api_key = env("OPENAI_API_KEY")
         }
-        '''
+        """
         acp_file = parse_acp(content)
         resolution = resolve_references(acp_file)
         spec = normalize_acp(acp_file, resolution)
@@ -29,13 +28,13 @@ class TestProviderNormalization:
 
     def test_normalizes_provider_with_custom_name(self) -> None:
         """Test that non-default provider names include the name."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         provider "llm.openai" "production" {
             api_key = env("OPENAI_PROD_KEY")
         }
-        '''
+        """
         acp_file = parse_acp(content)
         resolution = resolve_references(acp_file)
         spec = normalize_acp(acp_file, resolution)
@@ -48,7 +47,7 @@ class TestModelNormalization:
 
     def test_model_info_embedded_in_agent(self) -> None:
         """Test that model info is embedded in agent config."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         provider "llm.openai" "default" {
@@ -72,7 +71,7 @@ class TestModelNormalization:
             entry = step.end
             step "end" { type = "end" }
         }
-        '''
+        """
         acp_file = parse_acp(content)
         resolution = resolve_references(acp_file)
         spec = normalize_acp(acp_file, resolution)
@@ -86,7 +85,7 @@ class TestModelNormalization:
 
     def test_fallback_model_normalized(self) -> None:
         """Test that fallback models are normalized."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         provider "llm.openai" "default" {
@@ -113,7 +112,7 @@ class TestModelNormalization:
             entry = step.end
             step "end" { type = "end" }
         }
-        '''
+        """
         acp_file = parse_acp(content)
         resolution = resolve_references(acp_file)
         spec = normalize_acp(acp_file, resolution)
@@ -128,7 +127,7 @@ class TestServerNormalization:
 
     def test_normalizes_server(self) -> None:
         """Test that servers are normalized correctly."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         server "filesystem" {
@@ -136,7 +135,7 @@ class TestServerNormalization:
             transport = "stdio"
             command = ["npx", "server", "/path"]
         }
-        '''
+        """
         acp_file = parse_acp(content)
         resolution = resolve_references(acp_file)
         spec = normalize_acp(acp_file, resolution)
@@ -153,7 +152,7 @@ class TestCapabilityNormalization:
 
     def test_normalizes_capability(self) -> None:
         """Test that capabilities are normalized correctly."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         server "fs" {
@@ -166,7 +165,7 @@ class TestCapabilityNormalization:
             side_effect = "write"
             requires_approval = true
         }
-        '''
+        """
         acp_file = parse_acp(content)
         resolution = resolve_references(acp_file)
         spec = normalize_acp(acp_file, resolution)
@@ -185,7 +184,7 @@ class TestPolicyNormalization:
 
     def test_normalizes_policy(self) -> None:
         """Test that policies are normalized correctly."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         policy "default" {
@@ -193,7 +192,7 @@ class TestPolicyNormalization:
             budgets { timeout_seconds = 60 }
             budgets { max_capability_calls = 10 }
         }
-        '''
+        """
         acp_file = parse_acp(content)
         resolution = resolve_references(acp_file)
         spec = normalize_acp(acp_file, resolution)
@@ -212,7 +211,7 @@ class TestWorkflowNormalization:
 
     def test_normalizes_workflow(self) -> None:
         """Test that workflows are normalized correctly."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         provider "llm.openai" "default" {
@@ -242,7 +241,7 @@ class TestWorkflowNormalization:
 
             step "end" { type = "end" }
         }
-        '''
+        """
         acp_file = parse_acp(content)
         resolution = resolve_references(acp_file)
         spec = normalize_acp(acp_file, resolution)
@@ -272,7 +271,7 @@ class TestStepTypeNormalization:
 
     def test_normalizes_call_step(self) -> None:
         """Test that call steps are normalized correctly."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         server "fs" { command = ["npx", "server"] }
@@ -295,7 +294,7 @@ class TestStepTypeNormalization:
 
             step "end" { type = "end" }
         }
-        '''
+        """
         acp_file = parse_acp(content)
         resolution = resolve_references(acp_file)
         spec = normalize_acp(acp_file, resolution)
@@ -309,7 +308,7 @@ class TestStepTypeNormalization:
 
     def test_normalizes_condition_step(self) -> None:
         """Test that condition steps are normalized correctly."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         workflow "route" {
@@ -325,7 +324,7 @@ class TestStepTypeNormalization:
             step "yes" { type = "end" }
             step "no" { type = "end" }
         }
-        '''
+        """
         acp_file = parse_acp(content)
         resolution = resolve_references(acp_file)
         spec = normalize_acp(acp_file, resolution)
@@ -343,7 +342,7 @@ class TestFullNormalization:
 
     def test_normalizes_complete_spec(self) -> None:
         """Test that a complete spec normalizes correctly."""
-        content = '''
+        content = """
         acp { version = "0.2" project = "complete-test" }
 
         provider "llm.openai" "default" {
@@ -389,7 +388,7 @@ class TestFullNormalization:
 
             step "end" { type = "end" }
         }
-        '''
+        """
         acp_file = parse_acp(content)
         resolution = resolve_references(acp_file)
         spec = normalize_acp(acp_file, resolution)
@@ -417,4 +416,3 @@ class TestFullNormalization:
         workflow = spec.workflows[0]
         assert workflow.name == "ask"
         assert len(workflow.steps) == 2
-

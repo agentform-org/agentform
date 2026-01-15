@@ -569,4 +569,3 @@ def parse_acp_file(path: str | Path) -> ACPFile:
         raise ACPParseError(f"Failed to read file: {e}") from e
 
     return parse_acp(content, file_path=str(path))
-

@@ -36,13 +36,13 @@ This example showcases advanced ACP features including:
 Review a pull request:
 
 ```bash
-acp run review_pr --spec spec.yaml --input-file input.yaml
+acp run review_pr --spec spec.acp --input-file input.yaml
 ```
 
 Or specify PR details inline:
 
 ```bash
-acp run review_pr --spec spec.yaml --input-json '{
+acp run review_pr --spec spec.acp --input '{
   "owner": "myorg",
   "repo": "myrepo",
   "pr_number": 42
@@ -61,142 +61,169 @@ The workflow will:
 ### Authenticated MCP Server
 GitHub server requires authentication via environment variable.
 
-```yaml
-servers:
-  - name: github
-    type: mcp
-    transport: stdio
-    command:
-      - npx
-      - "@modelcontextprotocol/server-github"
-    auth:
-      token: env:GITHUB_PERSONAL_ACCESS_TOKEN  # Auth token from env
+```hcl
+server "github" {
+  type      = "mcp"
+  transport = "stdio"
+  command   = ["npx", "@modelcontextprotocol/server-github"]
+  auth {
+    token = env("GITHUB_PERSONAL_ACCESS_TOKEN")  // Auth token from env
+  }
+}
 ```
 
 ### Capabilities with Approval Requirements
 Some capabilities modify state and require explicit human approval.
 
-```yaml
-capabilities:
-  # Read-only capabilities
-  - name: get_pr
-    server: github
-    method: get_pull_request
-    side_effect: read
+```hcl
+// Read-only capabilities
+capability "get_pr" {
+  server      = server.github
+  method      = "get_pull_request"
+  side_effect = "read"
+}
 
-  - name: list_pr_files
-    server: github
-    method: get_pull_request_files
-    side_effect: read
+capability "list_pr_files" {
+  server      = server.github
+  method      = "get_pull_request_files"
+  side_effect = "read"
+}
 
-  # Write capability requiring approval
-  - name: create_review
-    server: github
-    method: create_pull_request_review
-    side_effect: write
-    requires_approval: true           # Human must approve before execution
+// Write capability requiring approval
+capability "create_review" {
+  server           = server.github
+  method           = "create_pull_request_review"
+  side_effect      = "write"
+  requires_approval = true  // Human must approve before execution
+}
 ```
 
-### Expert Reviewer Agent
+### Models and Expert Reviewer Agent
 Specialized agent with detailed code review instructions.
 
-```yaml
-agents:
-  - name: reviewer
-    provider: openai
-    model:
-      preference: gpt-4o              # Using capable model for code review
-    params:
-      temperature: 0.2                # Low temperature for consistent reviews
-    instructions: |
-      You are an expert code reviewer. Review pull requests thoroughly.
-      
-      Focus on:
-      - Code quality and best practices
-      - Potential bugs or edge cases
-      - Performance implications
-      - Security concerns
-      - Documentation and readability
-      
-      Be constructive and specific in your feedback.
-      Suggest improvements where possible.
-    allow:
-      - get_pr
-      - list_pr_files
-      - create_review
-    policy: review_policy
+```hcl
+model "gpt4o" {
+  provider = provider.llm.openai.default
+  id       = "gpt-4o"
+  params {
+    temperature = 0.2  // Low temperature for consistent reviews
+  }
+}
+
+agent "reviewer" {
+  model = model.gpt4o  // Using capable model for code review
+
+  instructions = <<EOF
+You are an expert code reviewer. Review pull requests thoroughly.
+
+Focus on:
+- Code quality and best practices
+- Potential bugs or edge cases
+- Performance implications
+- Security concerns
+- Documentation and readability
+
+Be constructive and specific in your feedback.
+Suggest improvements where possible.
+EOF
+
+  allow  = [capability.get_pr, capability.list_pr_files, capability.create_review]
+  policy = policy.review_policy
+}
 ```
 
 ### Workflow with Human Approval
 The workflow includes a human approval step before submitting reviews.
 
-```yaml
-workflows:
-  - name: review_pr
-    entry: fetch_pr
-    steps:
-      # Step 1: Fetch PR metadata
-      - id: fetch_pr
-        type: call
-        capability: get_pr
-        args:
-          owner: $input.owner
-          repo: $input.repo
-          pull_number: $input.pr_number
-        save_as: pr_data
-        next: fetch_files
+```hcl
+workflow "review_pr" {
+  entry = step.fetch_pr
 
-      # Step 2: Fetch changed files
-      - id: fetch_files
-        type: call
-        capability: list_pr_files
-        args:
-          owner: $input.owner
-          repo: $input.repo
-          pull_number: $input.pr_number
-        save_as: pr_files
-        next: analyze
+  // Step 1: Fetch PR metadata
+  step "fetch_pr" {
+    type       = "call"
+    capability = capability.get_pr
 
-      # Step 3: Generate review with LLM
-      - id: analyze
-        type: llm
-        agent: reviewer
-        input:
-          pr: $state.pr_data
-          files: $state.pr_files
-        save_as: review
-        next: approval
+    args {
+      owner       = input.owner
+      repo        = input.repo
+      pull_number = input.pr_number
+    }
 
-      # Step 4: Human approval gate
-      - id: approval
-        type: human_approval
-        payload: $state.review        # Show this to the human
-        on_approve: submit_review     # If approved, continue
-        on_reject: end                # If rejected, stop
+    output "pr_data" { from = result.data }
 
-      # Step 5: Submit the review
-      - id: submit_review
-        type: call
-        capability: create_review
-        args:
-          owner: $input.owner
-          repo: $input.repo
-          pull_number: $input.pr_number
-          body: $state.review.response
-          event: COMMENT              # COMMENT, APPROVE, or REQUEST_CHANGES
-        save_as: result
-        next: end
+    next = step.fetch_files
+  }
 
-      - id: end
-        type: end
+  // Step 2: Fetch changed files
+  step "fetch_files" {
+    type       = "call"
+    capability = capability.list_pr_files
+
+    args {
+      owner       = input.owner
+      repo        = input.repo
+      pull_number = input.pr_number
+    }
+
+    output "pr_files" { from = result.data }
+
+    next = step.analyze
+  }
+
+  // Step 3: Generate review with LLM
+  step "analyze" {
+    type  = "llm"
+    agent = agent.reviewer
+
+    input {
+      pr    = state.pr_data
+      files = state.pr_files
+    }
+
+    output "review" { from = result.text }
+
+    next = step.approval
+  }
+
+  // Step 4: Human approval gate
+  step "approval" {
+    type      = "human_approval"
+    payload   = "state.review"        // Show this to the human
+    on_approve = step.submit_review   // If approved, continue
+    on_reject  = step.end             // If rejected, stop
+  }
+
+  // Step 5: Submit the review
+  step "submit_review" {
+    type       = "call"
+    capability = capability.create_review
+
+    args {
+      owner       = input.owner
+      repo        = input.repo
+      pull_number = input.pr_number
+      body        = state.review
+      event       = "COMMENT"  // COMMENT, APPROVE, or REQUEST_CHANGES
+    }
+
+    output "result" { from = result.data }
+
+    next = step.end
+  }
+
+  step "end" { type = "end" }
+}
 ```
 
 ## Input Schema
 
-```yaml
-owner: "organization-or-username"
-repo: "repository-name"
-pr_number: 123
+```json
+{
+  "owner": "organization-or-username",
+  "repo": "repository-name",
+  "pr_number": 123
+}
 ```
 
 ## Key Concepts
@@ -204,25 +231,27 @@ pr_number: 123
 ### Human Approval Gates
 The `human_approval` step type pauses workflow execution and waits for human input:
 
-```yaml
-- id: approval
-  type: human_approval
-  payload: $state.review          # Data to show the approver
-  on_approve: submit_review       # Next step if approved
-  on_reject: end                  # Next step if rejected
+```hcl
+step "approval" {
+  type      = "human_approval"
+  payload   = "state.review"      // Data to show the approver
+  on_approve = step.submit_review  // Next step if approved
+  on_reject  = step.end            // Next step if rejected
+}
 ```
 
 This ensures humans remain in control of consequential actions.
 
 ### Capability Approval
-Capabilities marked with `requires_approval: true` trigger approval prompts even during LLM agent tool use:
+Capabilities marked with `requires_approval = true` trigger approval prompts even during LLM agent tool use:
 
-```yaml
-- name: create_review
-  server: github
-  method: create_pull_request_review
-  side_effect: write
-  requires_approval: true
+```hcl
+capability "create_review" {
+  server           = server.github
+  method           = "create_pull_request_review"
+  side_effect      = "write"
+  requires_approval = true
+}
 ```
 
 ### Sequential Data Gathering

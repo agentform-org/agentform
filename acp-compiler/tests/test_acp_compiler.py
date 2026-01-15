@@ -21,7 +21,7 @@ class TestCompileACP:
 
     def test_compiles_valid_acp(self) -> None:
         """Test that valid ACP compiles successfully."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         provider "llm.openai" "default" {
@@ -47,7 +47,7 @@ class TestCompileACP:
             }
             step "end" { type = "end" }
         }
-        '''
+        """
         # Set env var for test
         os.environ["OPENAI_API_KEY"] = "test-key"
         try:
@@ -63,14 +63,14 @@ class TestCompileACP:
 
     def test_compile_error_on_invalid_acp(self) -> None:
         """Test that invalid ACP raises CompilationError."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         agent "assistant" {
             model = model.nonexistent
             instructions = "test"
         }
-        '''
+        """
         with pytest.raises(CompilationError) as exc_info:
             compile_acp(content, check_env=False)
 
@@ -82,7 +82,7 @@ class TestCompileACPFile:
 
     def test_compiles_acp_file(self) -> None:
         """Test that ACP file compiles successfully."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "file-test" }
 
         provider "llm.openai" "default" {
@@ -103,7 +103,7 @@ class TestCompileACPFile:
             entry = step.end
             step "end" { type = "end" }
         }
-        '''
+        """
         with tempfile.NamedTemporaryFile(suffix=".acp", delete=False, mode="w") as f:
             f.write(content)
             f.flush()
@@ -127,7 +127,7 @@ class TestValidateACPFile:
 
     def test_validates_valid_file(self) -> None:
         """Test that valid file passes validation."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         provider "llm.openai" "default" {
@@ -148,7 +148,7 @@ class TestValidateACPFile:
             entry = step.end
             step "end" { type = "end" }
         }
-        '''
+        """
         with tempfile.NamedTemporaryFile(suffix=".acp", delete=False, mode="w") as f:
             f.write(content)
             f.flush()
@@ -161,13 +161,13 @@ class TestValidateACPFile:
 
     def test_returns_errors_for_invalid_file(self) -> None:
         """Test that invalid file returns errors."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         agent "assistant" {
             instructions = "test"
         }
-        '''
+        """
         with tempfile.NamedTemporaryFile(suffix=".acp", delete=False, mode="w") as f:
             f.write(content)
             f.flush()
@@ -185,7 +185,7 @@ class TestUnifiedCompileFile:
 
     def test_compiles_acp_file(self) -> None:
         """Test that .acp files are compiled correctly."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "acp-test" }
 
         provider "llm.openai" "default" {
@@ -206,7 +206,7 @@ class TestUnifiedCompileFile:
             entry = step.end
             step "end" { type = "end" }
         }
-        '''
+        """
         with tempfile.NamedTemporaryFile(suffix=".acp", delete=False, mode="w") as f:
             f.write(content)
             f.flush()
@@ -219,7 +219,7 @@ class TestUnifiedCompileFile:
 
     def test_compiles_yaml_file(self) -> None:
         """Test that .yaml files are compiled correctly."""
-        content = '''
+        content = """
 version: "0.1"
 project:
   name: yaml-test
@@ -243,7 +243,7 @@ workflows:
     steps:
       - id: end
         type: end
-        '''
+        """
         with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False, mode="w") as f:
             f.write(content)
             f.flush()
@@ -274,7 +274,7 @@ class TestUnifiedValidateFile:
 
     def test_validates_acp_file(self) -> None:
         """Test that .acp files are validated correctly."""
-        content = '''
+        content = """
         acp { version = "0.1" project = "test" }
 
         provider "llm.openai" "default" {
@@ -295,7 +295,7 @@ class TestUnifiedValidateFile:
             entry = step.end
             step "end" { type = "end" }
         }
-        '''
+        """
         with tempfile.NamedTemporaryFile(suffix=".acp", delete=False, mode="w") as f:
             f.write(content)
             f.flush()
@@ -308,7 +308,7 @@ class TestUnifiedValidateFile:
 
     def test_validates_yaml_file(self) -> None:
         """Test that .yaml files are validated correctly."""
-        content = '''
+        content = """
 version: "0.1"
 project:
   name: yaml-test
@@ -332,7 +332,7 @@ workflows:
     steps:
       - id: end
         type: end
-        '''
+        """
         with tempfile.NamedTemporaryFile(suffix=".yaml", delete=False, mode="w") as f:
             f.write(content)
             f.flush()
@@ -349,7 +349,7 @@ class TestIROutput:
 
     def test_ir_has_expected_fields(self) -> None:
         """Test that compiled IR has all expected fields."""
-        content = '''
+        content = """
         acp { version = "0.2" project = "ir-test" }
 
         provider "llm.openai" "default" {
@@ -385,7 +385,7 @@ class TestIROutput:
             }
             step "end" { type = "end" }
         }
-        '''
+        """
         compiled = compile_acp(content, check_env=False, resolve_credentials=False)
 
         # Check structure
@@ -423,4 +423,3 @@ class TestIROutput:
         assert process_step.input_mapping is not None
         assert process_step.save_as == "answer"
         assert process_step.next_step == "end"
-

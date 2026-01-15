@@ -27,17 +27,17 @@ This example showcases advanced ACP features including:
 Run with the provided input:
 
 ```bash
-acp run smart_respond --spec spec.yaml --input-file input.yaml
+acp run smart_respond --spec spec.acp --input-file input.yaml
 ```
 
 Try different task complexities:
 
 ```bash
 # Simple task (routed to quick_responder)
-acp run smart_respond --spec spec.yaml --input-json '{"task": "What is 2+2?"}'
+acp run smart_respond --spec spec.acp --input '{"task": "What is 2+2?"}'
 
 # Complex task (routed to deep_analyst)
-acp run smart_respond --spec spec.yaml --input-json '{"task": "Analyze the pros and cons of remote work policies"}'
+acp run smart_respond --spec spec.acp --input '{"task": "Analyze the pros and cons of remote work policies"}'
 ```
 
 ## Spec File Structure
@@ -45,131 +45,167 @@ acp run smart_respond --spec spec.yaml --input-json '{"task": "Analyze the pros 
 ### Multiple Providers
 Configure different LLM providers, each with their own authentication and default parameters.
 
-```yaml
-providers:
-  llm:
-    openai:
-      api_key: env:OPENAI_API_KEY
-      default_params:
-        temperature: 0.7
-        max_tokens: 2000
-    anthropic:
-      api_key: env:ANTHROPIC_API_KEY
-      default_params:
-        temperature: 0.5
-        max_tokens: 4000
+```hcl
+provider "llm.openai" "default" {
+  api_key = env("OPENAI_API_KEY")
+  default_params {
+    temperature = 0.7
+    max_tokens  = 2000
+  }
+}
+
+provider "llm.anthropic" "default" {
+  api_key = env("ANTHROPIC_API_KEY")
+  default_params {
+    temperature = 0.5
+    max_tokens  = 4000
+  }
+}
 ```
 
 ### Differentiated Policies
 Different policies for different use cases—fast and cheap vs. thorough and expensive.
 
-```yaml
-policies:
-  - name: fast
-    budgets:
-      max_cost_usd_per_run: 0.10     # Low budget for quick tasks
-      timeout_seconds: 30             # Short timeout
+```hcl
+policy "fast" {
+  budgets { max_cost_usd_per_run = 0.10 }  // Low budget for quick tasks
+  budgets { timeout_seconds = 30 }          // Short timeout
+}
 
-  - name: thorough
-    budgets:
-      max_cost_usd_per_run: 1.00     # Higher budget for analysis
-      timeout_seconds: 120            # Longer timeout allowed
+policy "thorough" {
+  budgets { max_cost_usd_per_run = 1.00 }  // Higher budget for analysis
+  budgets { timeout_seconds = 120 }         // Longer timeout allowed
+}
 ```
 
-### Specialized Agents
+### Models and Specialized Agents
 Each agent has a specific role with tailored instructions and configurations.
 
-```yaml
-agents:
-  # Classifier: Quickly categorizes incoming tasks
-  - name: classifier
-    provider: openai
-    model:
-      preference: gpt-4o-mini         # Fast, cheap model
-    params:
-      temperature: 0.1                # Low temperature for consistency
-    instructions: |
-      You are a task classifier. Analyze the input and classify it.
-      Categories:
-      - "simple": Basic questions, greetings, simple tasks
-      - "complex": Research, analysis, multi-step tasks
-      Respond with ONLY the category name, nothing else.
-    allow: []
-    policy: fast
+```hcl
+// OpenAI models
+model "gpt4o_mini" {
+  provider = provider.llm.openai.default
+  id       = "gpt-4o-mini"
+  params {
+    temperature = 0.1  // Low temperature for consistency
+  }
+}
 
-  # Quick Responder: Handles simple tasks efficiently
-  - name: quick_responder
-    provider: openai
-    model:
-      preference: gpt-4o-mini
-    instructions: |
-      You are a quick assistant. Give brief, helpful responses.
-    policy: fast
+model "gpt4o" {
+  provider = provider.llm.openai.default
+  id       = "gpt-4o"
+}
 
-  # Deep Analyst: Thorough analysis using Claude
-  - name: deep_analyst
-    provider: anthropic              # Different provider
-    model:
-      preference: claude-sonnet-4-5-20250929
-    params:
-      temperature: 0.3
-      max_tokens: 4000
-    instructions: |
-      You are a thorough analyst. Provide detailed responses.
-      Structure with: Summary, Analysis, Recommendations.
-    policy: thorough
+// Anthropic models
+model "claude_sonnet" {
+  provider = provider.llm.anthropic.default
+  id       = "claude-sonnet-4-5-20250929"
+  params {
+    temperature = 0.3
+    max_tokens  = 4000
+  }
+}
+
+// Classifier: Quickly categorizes incoming tasks
+agent "classifier" {
+  model = model.gpt4o_mini  // Fast, cheap model
+
+  instructions = <<EOF
+You are a task classifier. Analyze the input and classify it.
+Categories:
+- "simple": Basic questions, greetings, simple tasks
+- "complex": Research, analysis, multi-step tasks
+Respond with ONLY the category name, nothing else.
+EOF
+
+  policy = policy.fast
+}
+
+// Quick Responder: Handles simple tasks efficiently
+agent "quick_responder" {
+  model = model.gpt4o
+
+  instructions = <<EOF
+You are a quick assistant. Give brief, helpful responses.
+EOF
+
+  policy = policy.fast
+}
+
+// Deep Analyst: Thorough analysis using Claude
+agent "deep_analyst" {
+  model = model.claude_sonnet  // Different provider
+
+  instructions = <<EOF
+You are a thorough analyst. Provide detailed responses.
+Structure with: Summary, Analysis, Recommendations.
+EOF
+
+  policy = policy.thorough
+}
 ```
 
 ### Conditional Workflow
 The workflow uses conditions to route tasks to the appropriate agent.
 
-```yaml
-workflows:
-  - name: smart_respond
-    entry: classify
-    steps:
-      # Step 1: Classify the task
-      - id: classify
-        type: llm
-        agent: classifier
-        input:
-          task: $input.task
-        save_as: classification
-        next: route
+```hcl
+workflow "smart_respond" {
+  entry = step.classify
 
-      # Step 2: Route based on classification
-      - id: route
-        type: condition
-        condition: $state.classification.response == "simple"
-        on_true: quick_response       # Go here if simple
-        on_false: deep_response       # Go here if complex
+  // Step 1: Classify the task
+  step "classify" {
+    type  = "llm"
+    agent = agent.classifier
 
-      # Step 3a: Quick response path
-      - id: quick_response
-        type: llm
-        agent: quick_responder
-        input:
-          task: $input.task
-        save_as: response
-        next: end
+    input { task = input.task }
 
-      # Step 3b: Deep analysis path
-      - id: deep_response
-        type: llm
-        agent: deep_analyst
-        input:
-          task: $input.task
-        save_as: response
-        next: end
+    output "classification" { from = result.text }
 
-      - id: end
-        type: end
+    next = step.route
+  }
+
+  // Step 2: Route based on classification
+  step "route" {
+    type      = "condition"
+    condition = "state.classification.response == \"simple\""
+    on_true   = step.quick_response  // Go here if simple
+    on_false  = step.deep_response    // Go here if complex
+  }
+
+  // Step 3a: Quick response path
+  step "quick_response" {
+    type  = "llm"
+    agent = agent.quick_responder
+
+    input { task = input.task }
+
+    output "response" { from = result.text }
+
+    next = step.end
+  }
+
+  // Step 3b: Deep analysis path
+  step "deep_response" {
+    type  = "llm"
+    agent = agent.deep_analyst
+
+    input { task = input.task }
+
+    output "response" { from = result.text }
+
+    next = step.end
+  }
+
+  step "end" { type = "end" }
+}
 ```
 
 ## Input Schema
 
-```yaml
-task: "Your task or question here"
+```json
+{
+  "task": "Your task or question here"
+}
 ```
 
 ## Key Concepts
@@ -177,12 +213,13 @@ task: "Your task or question here"
 ### Conditional Routing
 The `condition` step type allows dynamic workflow paths:
 
-```yaml
-- id: route
-  type: condition
-  condition: $state.classification.response == "simple"
-  on_true: quick_response
-  on_false: deep_response
+```hcl
+step "route" {
+  type      = "condition"
+  condition = "state.classification.response == \"simple\""
+  on_true   = step.quick_response
+  on_false  = step.deep_response
+}
 ```
 
 Conditions evaluate expressions against the current state and route to different steps.

@@ -401,4 +401,3 @@ def resolve_references(acp_file: ACPFile) -> ResolutionResult:
     """
     resolver = ReferenceResolver(acp_file)
     return resolver.resolve()
-

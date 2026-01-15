@@ -21,6 +21,7 @@ except ImportError:
 
 class ExpressionError(Exception):
     """Error during expression evaluation."""
+
     pass
 
 
@@ -228,7 +229,7 @@ class WorkflowState:
             q_pos = self._find_ternary_operator(condition)
             if q_pos > 0:
                 cond_part = condition[:q_pos].strip()
-                rest = condition[q_pos + 1:]
+                rest = condition[q_pos + 1 :]
                 c_pos = self._find_colon(rest)
                 if c_pos > 0:
                     cond_result = self.evaluate_condition(cond_part)

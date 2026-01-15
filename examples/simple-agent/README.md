@@ -18,101 +18,115 @@ This is the simplest possible ACP configuration—a single agent with no externa
 Run the example with:
 
 ```bash
-acp run ask --spec spec.yaml --input-file input.yaml
+acp run ask --spec spec.acp --input-file input.yaml
 ```
 
 Or provide inline input:
 
 ```bash
-acp run ask --spec spec.yaml --input-json '{"question": "What is the meaning of life?"}'
+acp run ask --spec spec.acp --input '{"question": "What is the meaning of life?"}'
 ```
 
 ## Spec File Structure
 
-### `version`
-Specifies the ACP specification version being used.
+### `acp` Block
+Specifies the ACP specification version and project name.
 
-```yaml
-version: "0.1"
+```hcl
+acp {
+  version = "0.1"
+  project = "simple-agent-example"
+}
 ```
 
-### `project`
-Basic project metadata including the project name.
-
-```yaml
-project:
-  name: simple-agent-example
-```
-
-### `providers`
+### `provider` Block
 Configures LLM providers. This example uses OpenAI with default parameters that apply to all agents using this provider.
 
-```yaml
-providers:
-  llm:
-    openai:
-      api_key: env:OPENAI_API_KEY    # Reference environment variable
-      default_params:
-        temperature: 0.7              # Controls randomness (0-1)
-        max_tokens: 2000              # Maximum response length
+```hcl
+provider "llm.openai" "default" {
+  api_key = env("OPENAI_API_KEY")  // Reference environment variable
+  default_params {
+    temperature = 0.7              // Controls randomness (0-1)
+    max_tokens  = 2000             // Maximum response length
+  }
+}
 ```
 
-### `policies`
+### `policy` Block
 Define resource constraints and budgets for agent execution. Policies help prevent runaway costs and ensure predictable behavior.
 
-```yaml
-policies:
-  - name: default
-    budgets:
-      max_cost_usd_per_run: 0.50    # Maximum cost per workflow run
-      timeout_seconds: 60            # Maximum execution time
+```hcl
+policy "default" {
+  budgets { max_cost_usd_per_run = 0.50 }  // Maximum cost per workflow run
+  budgets { timeout_seconds = 60 }          // Maximum execution time
+}
 ```
 
-### `agents`
-Configure individual agents with their models, instructions, and capabilities.
+### `model` Blocks
+Models are first-class entities attached to providers. They define how to talk to specific LLMs.
 
-```yaml
-agents:
-  - name: assistant
-    provider: openai                 # Reference to provider defined above
-    model:
-      preference: gpt-4o-mini        # Primary model choice
-      fallback: gpt-4o               # Fallback if primary unavailable
-    params:
-      temperature: 0.5               # Override provider default
-    instructions: |                  # System prompt for the agent
-      You are a helpful assistant. Answer questions clearly and concisely.
-      If you don't know something, say so.
-    allow: []                        # No external capabilities needed
-    policy: default                  # Apply the "default" policy
+```hcl
+model "gpt4o_mini" {
+  provider = provider.llm.openai.default
+  id       = "gpt-4o-mini"
+  params {
+    temperature = 0.5              // Override provider default
+  }
+}
+
+model "gpt4o" {
+  provider = provider.llm.openai.default
+  id       = "gpt-4o"
+}
 ```
 
-### `workflows`
+### `agent` Block
+Configure agents with their models, instructions, and capabilities.
+
+```hcl
+agent "assistant" {
+  model           = model.gpt4o_mini     // Primary model
+  fallback_models = [model.gpt4o]        // Fallback if primary unavailable
+
+  instructions = <<EOF
+You are a helpful assistant. Answer questions clearly and concisely.
+If you don't know something, say so.
+EOF
+
+  policy = policy.default              // Apply the "default" policy
+}
+```
+
+### `workflow` Block
 Define the execution flow using steps. Each workflow has an entry point and a series of connected steps.
 
-```yaml
-workflows:
-  - name: ask
-    entry: process                   # Starting step ID
-    steps:
-      - id: process
-        type: llm                    # Step that calls an LLM agent
-        agent: assistant             # Reference to agent defined above
-        input:
-          question: $input.question  # Map workflow input to agent input
-        save_as: answer              # Store result in state as "answer"
-        next: end                    # Next step to execute
+```hcl
+workflow "ask" {
+  entry = step.process                 // Starting step ID
 
-      - id: end
-        type: end                    # Terminates the workflow
+  step "process" {
+    type  = "llm"                      // Step that calls an LLM agent
+    agent = agent.assistant            // Reference to agent defined above
+
+    input { question = input.question }  // Map workflow input to agent input
+
+    output "answer" { from = result.text }  // Store result in state as "answer"
+
+    next = step.end                    // Next step to execute
+  }
+
+  step "end" { type = "end" }          // Terminates the workflow
+}
 ```
 
 ## Input Schema
 
 The workflow expects input with the following structure:
 
-```yaml
-question: "Your question here"
+```json
+{
+  "question": "Your question here"
+}
 ```
 
 ## Output
