@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "acp-runtime"
-version = "0.0.801"
+version = "0.0.802"
 description = "Workflow execution engine for ACP"
 authors = ["ACP Team"]
 readme = "README.md"
