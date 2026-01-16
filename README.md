@@ -21,6 +21,29 @@
 
 ---
 
+## Table of Contents
+
+- [Why ACP?](#why-acp)
+- [Installation](#installation)
+  - [Quick Install (Recommended)](#quick-install-recommended)
+  - [Verify Installation](#verify-installation)
+- [Quick Start](#quick-start)
+- [Features](#features)
+- [Architecture](#architecture)
+- [Examples](#examples)
+- [Modules](#modules)
+  - [Using Modules](#using-modules)
+  - [Creating Modules](#creating-modules)
+  - [Module Source Formats](#module-source-formats)
+  - [Module Caching](#module-caching)
+- [CLI Reference](#cli-reference)
+- [Contributing](#contributing)
+  - [Development Setup](#development-setup)
+  - [Project Structure](#project-structure)
+- [License](#license)
+
+---
+
 ## Why ACP?
 
 Most AI agent frameworks require you to write imperative code - managing state, handling retries, wiring up tools. ACP takes a different approach: **describe your agents declaratively in ACP native schema, and let the runtime engine handle the rest.**
@@ -148,6 +171,7 @@ acp run ask --spec my-agent.acp --input '{"question": "What is the capital of Fr
 | Feature | Description |
 |---------|-------------|
 | **Native Schema** | Define agents, workflows, and policies in type-safe `.acp` format with explicit references |
+| **Modules** | Terraform-style reusable modules for sharing agent configurations via Git |
 | **Multi-Provider** | Use OpenAI, Anthropic, or other LLM providers interchangeably |
 | **Multi-Agent** | Coordinate multiple specialized agents with conditional routing |
 | **MCP Integration** | Connect to external tools via Model Context Protocol servers |
@@ -201,39 +225,158 @@ flowchart TB
 
 ## Examples
 
-The `examples/` directory contains ready-to-use configurations (all in `.acp` format):
+The [`examples/`](examples/) directory contains ready-to-use configurations demonstrating various ACP features. Each example includes detailed documentation explaining the concepts it covers.
 
-### Simple Agent
+**[Browse all examples →](examples/)**
 
-A basic question-answering agent:
-
-```bash
-acp run ask --spec examples/simple-agent/spec.acp --input '{"question": "Hello!"}'
-```
-
-### Filesystem Agent
-
-An agent that can read, write, and analyze files using MCP:
+Quick start with the simplest example:
 
 ```bash
-acp run read_and_summarize --spec examples/filesystem-agent/spec.acp \
-  --input '{"file_path": "/path/to/file.txt", "task": "Summarize this file"}'
+cd examples/simple-agent
+acp run ask --var openai_api_key=$OPENAI_API_KEY --input '{"question": "Hello!"}'
 ```
 
-### Multi-Agent Router
+<br />
 
-Conditional routing between agents based on task complexity:
+## Modules
+
+ACP supports a **Terraform-style module system** for creating reusable, shareable agent configurations. Modules let you package providers, policies, agents, and workflows together, making it easy for others to use without extensive configuration.
+
+### Using Modules
+
+#### 1. Import a module in your project
+
+Create a module block referencing a Git repository:
+
+```hcl
+module "pr-reviewer" {
+  source  = "github.com/org/acp-modules//pr-reviewer"
+  version = "v1.0.0"  // Git branch, tag, or commit
+  
+  // Pass required parameters
+  api_key = var.openai_api_key
+  model   = "gpt-4o"
+}
+```
+
+The `//` syntax separates the repository URL from the subdirectory path (like Terraform).
+
+#### 2. Initialize your project
+
+Download all external modules to your local `.acp/modules/` directory:
 
 ```bash
-acp run smart_respond --spec examples/multi-agent/spec.acp \
-  --input '{"task": "Explain quantum computing"}'
+acp init
 ```
+
+This clones the module repositories locally. You must run `acp init` before compiling or running workflows that use external modules.
+
+#### 3. Use module resources
+
+Resources from modules are namespaced with `module.<name>`:
+
+```hcl
+workflow "review" {
+  entry = step.start
+  
+  step "start" {
+    type  = "llm"
+    agent = agent.module.pr-reviewer.reviewer  // Use module's agent
+    next  = step.end
+  }
+  
+  step "end" { type = "end" }
+}
+```
+
+Or run a module's workflow directly:
+
+```bash
+acp run module.pr-reviewer.review_workflow .
+```
+
+### Creating Modules
+
+A module is simply a directory containing `.acp` files. To create a shareable module:
+
+#### 1. Create the module structure
+
+```
+my-module/
+├── 00-project.acp      # Module metadata
+├── 01-variables.acp    # Input parameters (variables)
+├── 02-providers.acp    # LLM providers
+├── 03-policies.acp     # Policies
+├── 04-models.acp       # Model configurations
+├── 05-agents.acp       # Agent definitions
+└── 06-workflows.acp    # Workflows (optional)
+```
+
+#### 2. Define input variables
+
+Variables without defaults become required parameters:
+
+```hcl
+// 01-variables.acp
+variable "api_key" {
+  type        = string
+  description = "API key for the LLM provider"
+  sensitive   = true
+  // No default = required parameter
+}
+
+variable "model" {
+  type        = string
+  description = "Model to use"
+  default     = "gpt-4o-mini"  // Has default = optional
+}
+```
+
+#### 3. Publish to Git
+
+Push your module to a Git repository. Users can then reference it:
+
+```hcl
+module "my-module" {
+  source  = "github.com/your-org/your-repo//path/to/module"
+  version = "main"
+  
+  api_key = var.my_api_key
+}
+```
+
+### Module Source Formats
+
+| Format | Example |
+|--------|---------|
+| GitHub | `github.com/org/repo` |
+| GitHub with subdirectory | `github.com/org/repo//modules/my-module` |
+| GitLab | `gitlab.com/org/repo` |
+| Local path | `./modules/my-module` |
+
+### Module Caching
+
+Modules are cached in `.acp/modules/` within your project directory:
+
+```
+my-project/
+├── .acp/
+│   └── modules/
+│       └── github_com_org_repo_abc123/  # Cached module
+├── 00-project.acp
+└── 01-modules.acp
+```
+
+Add `.acp/` to your `.gitignore` - these are downloaded dependencies.
 
 <br />
 
 ## CLI Reference
 
 ```bash
+# Initialize project - download external modules
+acp init [directory]
+
 # Validate a specification
 acp validate <spec-file>
 

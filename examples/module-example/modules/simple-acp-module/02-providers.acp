@@ -1,6 +1,0 @@
-// Provider Configuration
-// Exposes an OpenAI provider configured with the API key
-
-provider "llm.openai" "default" {
-  api_key = var.api_key
-}

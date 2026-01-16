@@ -184,6 +184,9 @@ class ModuleResolver:
 
     Handles both local paths and Git URLs, with caching for Git modules.
     Modules are cached in .acp/modules/ within the project directory.
+
+    Git modules must be downloaded first using 'acp init'.
+    Use download_module() to download modules (called by init command).
     """
 
     def __init__(
@@ -206,6 +209,9 @@ class ModuleResolver:
     def resolve(self, source: str, version: str | None = None) -> ResolvedModule:
         """Resolve a module source to a local path.
 
+        For Git modules, this will error if the module hasn't been downloaded.
+        Use 'acp init' to download modules first.
+
         Args:
             source: Module source (Git URL or local path)
             version: Version/ref for Git modules (tag, branch, commit)
@@ -214,7 +220,7 @@ class ModuleResolver:
             ResolvedModule with the local path
 
         Raises:
-            ModuleResolutionError: If resolution fails
+            ModuleResolutionError: If resolution fails or module not downloaded
         """
         # Check cache first
         cache_key = (source, version)
@@ -228,6 +234,85 @@ class ModuleResolver:
 
         self._resolved_cache[cache_key] = result
         return result
+
+    def download_module(
+        self, source: str, version: str | None = None
+    ) -> ResolvedModule:
+        """Download a Git module (used by 'acp init').
+
+        This method always clones/updates Git modules, regardless of auto_download setting.
+        For local modules, this just validates they exist.
+
+        Args:
+            source: Module source (Git URL or local path)
+            version: Version/ref for Git modules (tag, branch, commit)
+
+        Returns:
+            ResolvedModule with the local path
+
+        Raises:
+            ModuleResolutionError: If download fails
+        """
+        if not is_git_url(source):
+            # Local module - just resolve it
+            return self._resolve_local_module(source)
+
+        # Git module - force download
+        # Parse source to extract repo URL and subdirectory
+        parsed = _parse_git_source(source)
+        repo_url = parsed.repo_url
+        subdir = parsed.subdir
+
+        # Ensure cache directory exists
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
+
+        # Get cache key and target path
+        cache_key = _get_cache_key(repo_url, version)
+        repo_path = self.cache_dir / cache_key
+
+        # Normalize URL for cloning
+        git_url = _normalize_git_url(repo_url)
+
+        # Always clone or update
+        if repo_path.exists():
+            if not (repo_path / ".git").exists():
+                # Not a valid git repo, remove and re-clone
+                shutil.rmtree(repo_path)
+                self._clone_module(git_url, repo_path, version)
+            elif version:
+                # Update to specific version
+                self._checkout_version(repo_path, version)
+            # else: already exists and no specific version, keep as-is
+        else:
+            self._clone_module(git_url, repo_path, version)
+
+        # Determine module path (repo root or subdirectory)
+        if subdir:
+            module_path = repo_path / subdir
+            if not module_path.exists():
+                raise ModuleResolutionError(
+                    f"Subdirectory '{subdir}' not found in repository: {repo_url}"
+                )
+            if not module_path.is_dir():
+                raise ModuleResolutionError(
+                    f"Subdirectory path is not a directory: {subdir}"
+                )
+        else:
+            module_path = repo_path
+
+        # Verify module has .acp files
+        acp_files = list(module_path.glob("*.acp"))
+        if not acp_files:
+            raise ModuleResolutionError(
+                f"No .acp files found in module: {source}"
+            )
+
+        return ResolvedModule(
+            path=module_path,
+            source=source,
+            version=version,
+            is_local=False,
+        )
 
     def _resolve_local_module(self, source: str) -> ResolvedModule:
         """Resolve a local module path.
@@ -304,18 +389,23 @@ class ModuleResolver:
         # Normalize URL for cloning
         git_url = _normalize_git_url(repo_url)
 
-        # Clone or update
-        if repo_path.exists():
-            # Already cloned, verify it's valid
-            if not (repo_path / ".git").exists():
-                # Not a git repo, remove and re-clone
-                shutil.rmtree(repo_path)
-                self._clone_module(git_url, repo_path, version)
-            elif version:
-                # Checkout specific version
-                self._checkout_version(repo_path, version)
-        else:
-            self._clone_module(git_url, repo_path, version)
+        # Check if module is cached (must run 'acp init' first)
+        if not repo_path.exists():
+            raise ModuleResolutionError(
+                f"Module '{source}' not found locally. "
+                f"Run 'acp init' to download external modules."
+            )
+
+        # Verify it's a valid git repo
+        if not (repo_path / ".git").exists():
+            raise ModuleResolutionError(
+                f"Module '{source}' cache is corrupted. "
+                f"Run 'acp init' to re-download modules."
+            )
+
+        # Checkout specific version if requested
+        if version:
+            self._checkout_version(repo_path, version)
 
         # Determine the module path (repo root or subdirectory)
         if subdir:

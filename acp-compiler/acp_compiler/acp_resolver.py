@@ -278,8 +278,8 @@ class ReferenceResolver:
                         kind="module",
                         location=module.location,
                         block=module,
+                        )
                     )
-                )
 
     def _resolve_references(self) -> None:
         """Resolve all references in the AST."""
