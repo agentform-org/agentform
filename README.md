@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/🤖_ACP-Agent_as_Code_Protocol-6366f1?style=for-the-badge&labelColor=1e1b4b" alt="ACP" />
+  <img width="1200" height="300" alt="ACP" src="https://github.com/user-attachments/assets/963d3079-7242-434c-8764-6b7d4d1e37f4" />
 </p>
 
 <p align="center">
