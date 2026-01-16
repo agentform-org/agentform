@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "acp-mcp"
-version = "0.0.803"
+version = "0.0.804"
 description = "MCP server integration for ACP"
 authors = ["ACP Team"]
 readme = "README.md"
