@@ -208,7 +208,7 @@ class TestModuleIntegration:
 
             # Create main project file
             main_file = project_dir / "main.acp"
-            main_file.write_text(f'''
+            main_file.write_text(f"""
             acp {{
                 version = "0.1"
                 project = "test-with-module"
@@ -242,7 +242,7 @@ class TestModuleIntegration:
                     type = "end"
                 }}
             }}
-            ''')
+            """)
 
             # Compile the project
             result = compile_acp_directory(

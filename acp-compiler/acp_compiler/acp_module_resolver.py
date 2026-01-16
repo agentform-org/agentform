@@ -448,10 +448,10 @@ class ModuleResolver:
                 else:
                     raise ModuleResolutionError(f"Failed to clone module {url}: {result.stderr}")
 
-        except subprocess.TimeoutExpired:
-            raise ModuleResolutionError(f"Timeout while cloning module {url}") from None
-        except FileNotFoundError:
-            raise ModuleResolutionError("Git is not installed or not in PATH") from None
+        except subprocess.TimeoutExpired as e:
+            raise ModuleResolutionError(f"Timeout while cloning module {url}") from e
+        except FileNotFoundError as e:
+            raise ModuleResolutionError("Git is not installed or not in PATH") from e
 
     def _clone_and_checkout(self, url: str, target_path: Path, version: str) -> None:
         """Clone a repository and checkout a specific ref.
@@ -481,8 +481,8 @@ class ModuleResolver:
             # Checkout the specific version
             self._checkout_version(target_path, version)
 
-        except subprocess.TimeoutExpired:
-            raise ModuleResolutionError(f"Timeout while cloning module {url}") from None
+        except subprocess.TimeoutExpired as e:
+            raise ModuleResolutionError(f"Timeout while cloning module {url}") from e
 
     def _checkout_version(self, repo_path: Path, version: str) -> None:
         """Checkout a specific version in a Git repository.
@@ -496,12 +496,18 @@ class ModuleResolver:
         """
         try:
             # Fetch to ensure we have latest refs
-            subprocess.run(
+            fetch_result = subprocess.run(
                 ["git", "fetch", "--all", "--tags"],
                 cwd=repo_path,
                 capture_output=True,
+                text=True,
                 timeout=60,
             )
+
+            if fetch_result.returncode != 0:
+                raise ModuleResolutionError(
+                    f"Failed to fetch refs for module: {fetch_result.stderr}"
+                )
 
             # Checkout the version
             result = subprocess.run(
@@ -517,8 +523,8 @@ class ModuleResolver:
                     f"Failed to checkout version {version}: {result.stderr}"
                 )
 
-        except subprocess.TimeoutExpired:
-            raise ModuleResolutionError(f"Timeout while checking out version {version}") from None
+        except subprocess.TimeoutExpired as e:
+            raise ModuleResolutionError(f"Timeout while checking out version {version}") from e
 
     def clear_cache(self) -> None:
         """Clear the in-memory resolution cache."""
