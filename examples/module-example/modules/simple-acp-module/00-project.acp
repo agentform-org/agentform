@@ -1,0 +1,7 @@
+// LLM Provider Module
+// Provides a reusable OpenAI provider, models, and standard policy
+
+acp {
+  version = "0.1"
+  project = "simple-acp-module"
+}

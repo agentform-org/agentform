@@ -1,0 +1,7 @@
+// Policy configuration
+policy "standard" {
+  budgets {
+    max_cost_usd_per_run = 1.00
+    timeout_seconds = 60
+  }
+}

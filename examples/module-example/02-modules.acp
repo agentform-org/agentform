@@ -1,0 +1,14 @@
+// Module Imports
+// Import the local simple-acp-module with custom parameters
+
+module "simple-acp-module" {
+  source = "./modules/simple-acp-module"
+  
+  // Required parameter - pass through our project variable
+  api_key = var.openai_api_key
+
+  // Optional parameters - override defaults
+  default_model    = "gpt-4o-mini"
+  max_cost_per_run = 2.00
+  timeout_seconds  = 180
+}

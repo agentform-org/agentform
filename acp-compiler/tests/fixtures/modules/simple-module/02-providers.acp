@@ -1,0 +1,4 @@
+// Provider configuration
+provider "llm.openai" "default" {
+  api_key = var.api_key
+}

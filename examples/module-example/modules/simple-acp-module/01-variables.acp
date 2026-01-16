@@ -1,0 +1,26 @@
+// Module Parameters
+// These are the inputs that users of this module must/can provide
+
+variable "api_key" {
+  type        = string
+  description = "OpenAI API key"
+  sensitive   = true
+}
+
+variable "default_model" {
+  type        = string
+  default     = "gpt-4o-mini"
+  description = "Default model to use"
+}
+
+variable "max_cost_per_run" {
+  type        = number
+  default     = 1.00
+  description = "Maximum cost in USD per workflow run"
+}
+
+variable "timeout_seconds" {
+  type        = number
+  default     = 120
+  description = "Timeout for LLM calls in seconds"
+}

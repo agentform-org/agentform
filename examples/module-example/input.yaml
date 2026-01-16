@@ -1,0 +1,12 @@
+# Example input for the 'ask' workflow
+query: "What are the benefits of using modules in software development?"
+
+# Example input for the 'write_story' workflow
+# topic: "A robot who learns to paint"
+
+# Example input for the 'review_code' workflow
+# code_snippet: |
+#   def fibonacci(n):
+#     if n <= 1:
+#       return n
+#     return fibonacci(n-1) + fibonacci(n-2)

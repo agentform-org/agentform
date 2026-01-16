@@ -63,10 +63,12 @@ class ACPNormalizer:
         acp_file: ACPFile,
         resolution: ResolutionResult,
         variables: dict[str, Any] | None = None,
+        loaded_modules: dict[str, Any] | None = None,  # dict[str, LoadedModule]
     ):
         self.acp_file = acp_file
         self.resolution = resolution
         self.variables = variables or {}
+        self.loaded_modules = loaded_modules or {}
         # Build variable defaults from declarations
         self._variable_defs: dict[str, VariableBlock] = {v.name: v for v in acp_file.variables}
         # Cache for resolved model info
@@ -84,16 +86,182 @@ class ACPNormalizer:
         # Build model cache first (maps model name -> (provider, model_id, params))
         self._build_model_cache()
 
+        # Also build model cache for loaded modules
+        for module_name, loaded_module in self.loaded_modules.items():
+            self._build_module_model_cache(module_name, loaded_module)
+
+        # Normalize main resources
+        providers = self._normalize_providers()
+        servers = self._normalize_servers()
+        capabilities = self._normalize_capabilities()
+        policies = self._normalize_policies()
+        agents = self._normalize_agents()
+        workflows = self._normalize_workflows()
+
+        # Merge module resources with namespaced names
+        self._merge_module_resources(
+            providers, servers, capabilities, policies, agents, workflows
+        )
+
         return SpecRoot(
             version=self._get_version(),
             project=self._normalize_project(),
-            providers=self._normalize_providers(),
-            servers=self._normalize_servers(),
-            capabilities=self._normalize_capabilities(),
-            policies=self._normalize_policies(),
-            agents=self._normalize_agents(),
-            workflows=self._normalize_workflows(),
+            providers=providers,
+            servers=servers,
+            capabilities=capabilities,
+            policies=policies,
+            agents=agents,
+            workflows=workflows,
         )
+
+    def _build_module_model_cache(self, module_name: str, loaded_module: Any) -> None:
+        """Build model cache entries for a module's models.
+
+        Args:
+            module_name: Name of the module instance
+            loaded_module: LoadedModule instance
+        """
+        module_acp = loaded_module.acp_file
+
+        for model in module_acp.models:
+            # Get provider reference
+            provider_ref = model.get_attribute("provider")
+            if not isinstance(provider_ref, Reference):
+                continue
+
+            # Convert provider reference to key using same logic as _normalize_providers
+            provider_key = self._provider_ref_to_key(provider_ref)
+
+            # Get model ID (resolve VarRef if needed)
+            model_id = model.get_attribute("id")
+            if isinstance(model_id, VarRef):
+                # Resolve variable using module's parameters
+                var_name = model_id.var_name
+                if var_name in loaded_module.parameters:
+                    model_id = str(loaded_module.parameters[var_name])
+                else:
+                    # Check module's variable defaults
+                    for var_def in module_acp.variables:
+                        if var_def.name == var_name and var_def.default is not None:
+                            model_id = str(var_def.default)
+                            break
+                    else:
+                        model_id = model.name
+            elif not isinstance(model_id, str):
+                model_id = model.name
+
+            # Get params
+            params = None
+            params_block = model.get_params_block()
+            if params_block:
+                params = self._parse_llm_params(params_block)
+
+            # Cache with module-namespaced key
+            cache_key = f"module.{module_name}.model.{model.name}"
+            # Store with module-namespaced provider (matches key in providers.llm)
+            namespaced_provider = f"module.{module_name}.{provider_key}"
+            self._model_cache[cache_key] = (namespaced_provider, model_id, params)
+
+    def _merge_module_resources(
+        self,
+        providers: ProvidersConfig,
+        servers: list[ServerConfig],
+        capabilities: list[CapabilityConfig],
+        policies: list[PolicyConfig],
+        agents: list[AgentConfig],
+        workflows: list[WorkflowConfig],
+    ) -> None:
+        """Merge resources from loaded modules into the main spec.
+
+        Module resources are namespaced as: module.<module_name>.<resource_name>
+
+        Args:
+            providers: Main providers config to merge into
+            servers: Main servers list to merge into
+            capabilities: Main capabilities list to merge into
+            policies: Main policies list to merge into
+            agents: Main agents list to merge into
+            workflows: Main workflows list to merge into
+        """
+        for module_name, loaded_module in self.loaded_modules.items():
+            module_acp = loaded_module.acp_file
+            module_params = loaded_module.parameters
+
+            # Resolve VarRefs in module parameters against parent's variables
+            resolved_params: dict[str, Any] = {}
+            for param_name, param_value in module_params.items():
+                if isinstance(param_value, VarRef):
+                    # Resolve the VarRef against parent's variables
+                    resolved_value, _ = self._resolve_variable(param_value)
+                    resolved_params[param_name] = resolved_value
+                else:
+                    resolved_params[param_name] = param_value
+
+            # Create a sub-normalizer for the module with resolved parameters
+            module_normalizer = ACPNormalizer(
+                module_acp,
+                self.resolution,
+                resolved_params,
+                {},  # Modules don't have nested modules (for now)
+            )
+            # Build model cache for the module
+            module_normalizer._build_model_cache()
+
+            # Merge providers
+            module_providers = module_normalizer._normalize_providers()
+            if module_providers.llm:
+                for provider_name, provider_config in module_providers.llm.items():
+                    namespaced_name = f"module.{module_name}.{provider_name}"
+                    if providers.llm is None:
+                        providers.llm = {}
+                    providers.llm[namespaced_name] = provider_config
+
+            # Merge servers
+            module_servers = module_normalizer._normalize_servers()
+            for server_config in module_servers:
+                # Namespace the server name
+                server_config.name = f"module.{module_name}.{server_config.name}"
+                servers.append(server_config)
+
+            # Merge capabilities
+            module_capabilities = module_normalizer._normalize_capabilities()
+            for cap_config in module_capabilities:
+                # Namespace the capability name and server reference
+                cap_config.name = f"module.{module_name}.{cap_config.name}"
+                if cap_config.server:
+                    cap_config.server = f"module.{module_name}.{cap_config.server}"
+                capabilities.append(cap_config)
+
+            # Merge policies
+            module_policies = module_normalizer._normalize_policies()
+            for policy_config in module_policies:
+                # Namespace the policy name
+                policy_config.name = f"module.{module_name}.{policy_config.name}"
+                policies.append(policy_config)
+
+            # Merge agents (but update their model/policy references)
+            module_agents = module_normalizer._normalize_agents()
+            for agent_config in module_agents:
+                # Namespace the agent name
+                agent_config.name = f"module.{module_name}.{agent_config.name}"
+                # Update provider reference to be namespaced
+                if agent_config.provider and not agent_config.provider.startswith("module."):
+                    agent_config.provider = f"module.{module_name}.{agent_config.provider}"
+                # Update policy reference if it's from the module
+                if agent_config.policy and not agent_config.policy.startswith("module."):
+                    agent_config.policy = f"module.{module_name}.{agent_config.policy}"
+                agents.append(agent_config)
+
+            # Merge workflows (namespaced)
+            module_workflows = module_normalizer._normalize_workflows()
+            for workflow_config in module_workflows:
+                # Namespace the workflow name
+                workflow_config.name = f"module.{module_name}.{workflow_config.name}"
+                # Update agent references in workflow steps
+                for step in workflow_config.steps:
+                    if step.agent and not step.agent.startswith("module."):
+                        step.agent = f"module.{module_name}.{step.agent}"
+                workflows.append(workflow_config)
 
     def _get_version(self) -> str:
         """Get version from acp block."""
@@ -298,9 +466,12 @@ class ACPNormalizer:
             provider_ref = model.get_attribute("provider")
             provider_name = self._provider_ref_to_key(provider_ref)
 
-            # Get model id
+            # Get model id (resolve VarRef if needed)
             model_id = model.get_attribute("id")
-            if not isinstance(model_id, str):
+            if isinstance(model_id, VarRef):
+                resolved_id, _ = self._resolve_variable(model_id)
+                model_id = resolved_id
+            elif not isinstance(model_id, str):
                 model_id = model.name
 
             # Get params
@@ -545,12 +716,30 @@ class ACPNormalizer:
         )
 
     def _ref_to_name(self, ref: Any, expected_prefix: str) -> str | None:
-        """Extract name from a reference, removing the type prefix."""
+        """Extract name from a reference, removing the type prefix.
+
+        Handles:
+        - Direct references: policy.default -> default
+        - Module references: module.llm.policy.standard -> module.llm.standard
+        - Module model references: module.llm.model.default -> module.llm.model.default
+          (kept with "model." for model cache lookup)
+        """
         if isinstance(ref, Reference):
+            parts = ref.parts
+            # Handle module references: module.<name>.<type>.<resource>
+            if parts[0] == "module" and len(parts) >= 4:
+                module_name = parts[1]
+                resource_type = parts[2]
+                resource_name = ".".join(parts[3:])
+                # For models, keep the full path for cache lookup
+                if resource_type == "model":
+                    return f"module.{module_name}.model.{resource_name}"
+                # For other resources, just return module.name.resource_name
+                return f"module.{module_name}.{resource_name}"
             # e.g., model.gpt4 -> gpt4, step.process -> process
-            if ref.parts[0] == expected_prefix:
-                return ".".join(ref.parts[1:])
-            return ".".join(ref.parts)
+            if parts[0] == expected_prefix:
+                return ".".join(parts[1:])
+            return ".".join(parts)
         elif isinstance(ref, str):
             return ref
         return None
@@ -731,6 +920,7 @@ def normalize_acp(
     acp_file: ACPFile,
     resolution: ResolutionResult,
     variables: dict[str, Any] | None = None,
+    loaded_modules: dict[str, Any] | None = None,  # dict[str, LoadedModule]
 ) -> SpecRoot:
     """Normalize ACP AST to SpecRoot.
 
@@ -738,6 +928,7 @@ def normalize_acp(
         acp_file: Parsed ACP AST
         resolution: Result from reference resolution
         variables: Dictionary of variable values to substitute
+        loaded_modules: Dictionary of loaded module instances
 
     Returns:
         SpecRoot model compatible with existing pipeline
@@ -745,5 +936,5 @@ def normalize_acp(
     Raises:
         NormalizationError: If normalization fails
     """
-    normalizer = ACPNormalizer(acp_file, resolution, variables)
+    normalizer = ACPNormalizer(acp_file, resolution, variables, loaded_modules)
     return normalizer.normalize()

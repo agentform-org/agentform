@@ -426,6 +426,51 @@ class WorkflowBlock(ASTNode):
         return None
 
 
+class ModuleBlock(ASTNode):
+    """Module reference block.
+
+    module "llm-provider" {
+        source  = "github.com/acp-team/llm-providers"
+        version = "v1.2.0"
+
+        // Parameters passed to the module
+        openai_api_key = var.openai_api_key
+        default_model  = "gpt-4"
+    }
+    """
+
+    name: str  # Module instance name (e.g., "llm-provider")
+    attributes: list[Attribute] = Field(default_factory=list)
+    blocks: list[NestedBlock] = Field(default_factory=list)
+
+    def get_attribute(self, name: str) -> Value | None:
+        """Get attribute value by name."""
+        for attr in self.attributes:
+            if attr.name == name:
+                return cast("Value", attr.value)
+        return None
+
+    @property
+    def source(self) -> str | None:
+        """Get the module source (Git URL or local path)."""
+        val = self.get_attribute("source")
+        return val if isinstance(val, str) else None
+
+    @property
+    def version(self) -> str | None:
+        """Get the module version (Git ref - tag, branch, or commit)."""
+        val = self.get_attribute("version")
+        return val if isinstance(val, str) else None
+
+    def get_parameters(self) -> dict[str, Value]:
+        """Get all parameter attributes (excluding source and version)."""
+        params: dict[str, Value] = {}
+        for attr in self.attributes:
+            if attr.name not in ("source", "version"):
+                params[attr.name] = cast("Value", attr.value)
+        return params
+
+
 class ACPFile(ASTNode):
     """Root node representing an entire .acp file.
 
@@ -441,6 +486,7 @@ class ACPFile(ASTNode):
     models: list[ModelBlock] = Field(default_factory=list)
     agents: list[AgentBlock] = Field(default_factory=list)
     workflows: list[WorkflowBlock] = Field(default_factory=list)
+    modules: list[ModuleBlock] = Field(default_factory=list)
 
     def get_provider(self, full_name: str) -> ProviderBlock | None:
         """Get provider by full name (e.g., 'llm.openai.default')."""
@@ -496,6 +542,13 @@ class ACPFile(ASTNode):
         for variable in self.variables:
             if variable.name == name:
                 return variable
+        return None
+
+    def get_module(self, name: str) -> ModuleBlock | None:
+        """Get module by name."""
+        for module in self.modules:
+            if module.name == name:
+                return module
         return None
 
 
@@ -581,6 +634,7 @@ def merge_acp_files(files: list[ACPFile]) -> ACPFile:
     seen_models: dict[str, SourceLocation | None] = {}
     seen_agents: dict[str, SourceLocation | None] = {}
     seen_workflows: dict[str, SourceLocation | None] = {}
+    seen_modules: dict[str, SourceLocation | None] = {}
 
     # Merge all files
     for f in files:
@@ -672,5 +726,16 @@ def merge_acp_files(files: list[ACPFile]) -> ACPFile:
                 )
             seen_workflows[workflow.name] = workflow.location
             merged.workflows.append(workflow)
+
+        # Merge modules
+        for module in f.modules:
+            if module.name in seen_modules:
+                existing_loc = _format_location(seen_modules[module.name])
+                new_loc = _format_location(module.location)
+                raise MergeError(
+                    f"Duplicate module '{module.name}' defined in both {existing_loc} and {new_loc}"
+                )
+            seen_modules[module.name] = module.location
+            merged.modules.append(module)
 
     return merged

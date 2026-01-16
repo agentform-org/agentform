@@ -1,0 +1,12 @@
+// Module Agents
+// Pre-configured agents that can be used directly or as references
+
+agent "quick_assistant" {
+  model  = model.default
+  policy = policy.strict
+  
+  instructions = <<EOF
+You are a quick assistant. Provide brief, helpful responses.
+Keep answers concise and to the point.
+EOF
+}

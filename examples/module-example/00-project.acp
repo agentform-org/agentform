@@ -1,0 +1,7 @@
+// Module Example Project
+// Demonstrates how to use a local module to share common configurations
+
+acp {
+  version = "0.1"
+  project = "module-example"
+}

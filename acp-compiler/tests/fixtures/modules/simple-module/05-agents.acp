@@ -1,0 +1,7 @@
+// Agent configuration
+agent "assistant" {
+  model  = model.default
+  policy = policy.standard
+  
+  instructions = "You are a helpful assistant."
+}

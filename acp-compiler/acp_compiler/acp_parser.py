@@ -20,6 +20,7 @@ from acp_compiler.acp_ast import (
     ComparisonExpr,
     ConditionalExpr,
     ModelBlock,
+    ModuleBlock,
     NestedBlock,
     NotExpr,
     OrExpr,
@@ -146,6 +147,8 @@ class ACPTransformer(Transformer):
                 acp_file.agents.append(block)
             elif isinstance(block, WorkflowBlock):
                 acp_file.workflows.append(block)
+            elif isinstance(block, ModuleBlock):
+                acp_file.modules.append(block)
 
         return acp_file
 
@@ -330,6 +333,24 @@ class ACPTransformer(Transformer):
         )
 
     def workflow_body(self, meta: Any, children: list) -> list:
+        return children
+
+    # Module block
+    def module_block(self, meta: Any, children: list) -> ModuleBlock:
+        name = _unquote(str(children[0]))
+        body = children[1] if len(children) > 1 else []
+
+        attributes = [c for c in body if isinstance(c, Attribute)]
+        blocks = [c for c in body if isinstance(c, NestedBlock)]
+
+        return ModuleBlock(
+            name=name,
+            attributes=attributes,
+            blocks=blocks,
+            location=self._loc(meta),
+        )
+
+    def module_body(self, meta: Any, children: list) -> list:
         return children
 
     # Step block

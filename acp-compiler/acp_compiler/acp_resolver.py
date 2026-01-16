@@ -26,10 +26,11 @@ class Symbol:
     """A symbol in the symbol table."""
 
     name: str
-    kind: str  # "provider", "model", "agent", "policy", "workflow", "step", "server", "capability", "variable"
+    kind: str  # "provider", "model", "agent", "policy", "workflow", "step", "server", "capability", "variable", "module"
     location: SourceLocation | None = None
     parent: str | None = None  # For nested symbols (e.g., steps belong to workflows)
     block: object | None = None  # Reference to the actual block
+    module: str | None = None  # Module name if this symbol belongs to a module
 
 
 @dataclass
@@ -262,6 +263,24 @@ class ReferenceResolver:
                         )
                     )
 
+        # Modules: module.name
+        for module in self.acp_file.modules:
+            full_name = f"module.{module.name}"
+            if full_name in self.result.symbols:
+                self.result.add_error(
+                    f"Duplicate module: {module.name}",
+                    module.location,
+                )
+            else:
+                self.result.add_symbol(
+                    Symbol(
+                        name=full_name,
+                        kind="module",
+                        location=module.location,
+                        block=module,
+                    )
+                )
+
     def _resolve_references(self) -> None:
         """Resolve all references in the AST."""
         # Resolve provider references (variable references in api_key)
@@ -408,6 +427,19 @@ class ReferenceResolver:
     ) -> None:
         """Check that a reference exists and has the expected kind."""
         ref_path = ref.path
+
+        # Module references (module.name.*) are validated after module loading
+        # For now, just check that the module exists
+        if ref.parts[0] == "module" and len(ref.parts) >= 2:
+            module_name = f"module.{ref.parts[1]}"
+            if module_name not in self.result.symbols:
+                self.result.add_error(
+                    f"Unresolved module reference: {module_name}",
+                    ref.location or context_location,
+                )
+            # Module resource references will be validated after module loading
+            return
+
         symbol = self.result.symbols.get(ref_path)
 
         if symbol is None:
@@ -424,6 +456,17 @@ class ReferenceResolver:
     def _check_reference_exists(self, ref: Reference) -> None:
         """Check that a reference exists (any kind)."""
         ref_path = ref.path
+
+        # Module references (module.name.*) are validated after module loading
+        if ref.parts[0] == "module" and len(ref.parts) >= 2:
+            module_name = f"module.{ref.parts[1]}"
+            if module_name not in self.result.symbols:
+                self.result.add_error(
+                    f"Unresolved module reference: {module_name}",
+                    ref.location,
+                )
+            return
+
         if ref_path not in self.result.symbols:
             self.result.add_error(
                 f"Unresolved reference: {ref_path}",
@@ -476,3 +519,110 @@ def resolve_references(acp_file: ACPFile) -> ResolutionResult:
     """
     resolver = ReferenceResolver(acp_file)
     return resolver.resolve()
+
+
+def add_module_symbols(
+    result: ResolutionResult,
+    module_name: str,
+    module_acp: ACPFile,
+) -> None:
+    """Add symbols from a loaded module to the resolution result.
+
+    Module symbols are namespaced as:
+        module.<module_name>.<resource_type>.<resource_name>
+
+    Args:
+        result: Resolution result to add symbols to
+        module_name: Name of the module instance
+        module_acp: Parsed module ACPFile
+    """
+    # Add provider symbols
+    for provider in module_acp.providers:
+        full_name = f"module.{module_name}.provider.{provider.full_name}"
+        result.add_symbol(
+            Symbol(
+                name=full_name,
+                kind="provider",
+                location=provider.location,
+                block=provider,
+                module=module_name,
+            )
+        )
+
+    # Add server symbols
+    for server in module_acp.servers:
+        full_name = f"module.{module_name}.server.{server.name}"
+        result.add_symbol(
+            Symbol(
+                name=full_name,
+                kind="server",
+                location=server.location,
+                block=server,
+                module=module_name,
+            )
+        )
+
+    # Add capability symbols
+    for capability in module_acp.capabilities:
+        full_name = f"module.{module_name}.capability.{capability.name}"
+        result.add_symbol(
+            Symbol(
+                name=full_name,
+                kind="capability",
+                location=capability.location,
+                block=capability,
+                module=module_name,
+            )
+        )
+
+    # Add policy symbols
+    for policy in module_acp.policies:
+        full_name = f"module.{module_name}.policy.{policy.name}"
+        result.add_symbol(
+            Symbol(
+                name=full_name,
+                kind="policy",
+                location=policy.location,
+                block=policy,
+                module=module_name,
+            )
+        )
+
+    # Add model symbols
+    for model in module_acp.models:
+        full_name = f"module.{module_name}.model.{model.name}"
+        result.add_symbol(
+            Symbol(
+                name=full_name,
+                kind="model",
+                location=model.location,
+                block=model,
+                module=module_name,
+            )
+        )
+
+    # Add agent symbols
+    for agent in module_acp.agents:
+        full_name = f"module.{module_name}.agent.{agent.name}"
+        result.add_symbol(
+            Symbol(
+                name=full_name,
+                kind="agent",
+                location=agent.location,
+                block=agent,
+                module=module_name,
+            )
+        )
+
+    # Add workflow symbols
+    for workflow in module_acp.workflows:
+        full_name = f"module.{module_name}.workflow.{workflow.name}"
+        result.add_symbol(
+            Symbol(
+                name=full_name,
+                kind="workflow",
+                location=workflow.location,
+                block=workflow,
+                module=module_name,
+            )
+        )

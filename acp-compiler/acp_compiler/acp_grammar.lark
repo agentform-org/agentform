@@ -13,6 +13,7 @@ block: acp_block
      | model_block
      | agent_block
      | workflow_block
+     | module_block
 
 // Variable block: variable "name" { type = string, default = ..., ... }
 variable_block: "variable" STRING "{" variable_body "}"
@@ -49,6 +50,10 @@ agent_body: (attribute | nested_block)*
 // Workflow block with nested steps
 workflow_block: "workflow" STRING "{" workflow_body "}"
 workflow_body: (attribute | step_block)*
+
+// Module block: module "name" { source = "...", ... }
+module_block: "module" STRING "{" module_body "}"
+module_body: (attribute | nested_block)*
 
 // Step block (inside workflow)
 step_block: "step" STRING "{" step_body "}"

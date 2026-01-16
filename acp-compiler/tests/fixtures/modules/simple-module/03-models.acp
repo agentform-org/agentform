@@ -1,0 +1,9 @@
+// Model configuration
+model "default" {
+  provider = provider.llm.openai.default
+  id       = var.model_name
+  
+  params {
+    temperature = var.temperature
+  }
+}

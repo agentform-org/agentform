@@ -3,7 +3,15 @@
 Compiles native ACP schema (.acp) files.
 """
 
-from acp_compiler.acp_ast import MergeError, merge_acp_files
+from acp_compiler.acp_ast import MergeError, ModuleBlock, merge_acp_files
+from acp_compiler.acp_module_loader import LoadedModule, ModuleLoadError, ModuleLoader
+from acp_compiler.acp_module_resolver import (
+    ModuleResolutionError,
+    ModuleResolver,
+    ResolvedModule,
+    is_git_url,
+    resolve_module_source,
+)
 from acp_compiler.acp_normalizer import NormalizationError, normalize_acp
 
 # ACP native schema support
@@ -42,10 +50,17 @@ __all__ = [
     "CompilationError",
     "CredentialError",
     "IRGenerationError",
+    "LoadedModule",
     "MergeError",
+    "ModuleBlock",
+    "ModuleLoadError",
+    "ModuleLoader",
+    "ModuleResolutionError",
+    "ModuleResolver",
     "NormalizationError",
     "ResolutionError",
     "ResolutionResult",
+    "ResolvedModule",
     "ValidationError",
     "ValidationResult",
     "compile_acp",
@@ -56,12 +71,14 @@ __all__ = [
     "generate_ir",
     "get_env_var_name",
     "is_env_reference",
+    "is_git_url",
     "merge_acp_files",
     "normalize_acp",
     "parse_acp",
     "parse_acp_directory",
     "parse_acp_file",
     "resolve_env_var",
+    "resolve_module_source",
     "resolve_references",
     "validate_acp",
     "validate_acp_directory",

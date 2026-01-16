@@ -1,0 +1,17 @@
+// Module variables (parameters)
+variable "api_key" {
+  type        = string
+  description = "API key for the provider"
+  sensitive   = true
+}
+
+variable "model_name" {
+  type        = string
+  default     = "gpt-4o-mini"
+  description = "Model name to use"
+}
+
+variable "temperature" {
+  type    = number
+  default = 0.7
+}

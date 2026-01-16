@@ -249,9 +249,10 @@ def compile_acp_directory(
         CompilationError: If compilation fails
     """
     from acp_compiler.acp_ast import MergeError
+    from acp_compiler.acp_module_loader import LoadedModule, ModuleLoadError, ModuleLoader
     from acp_compiler.acp_normalizer import NormalizationError, normalize_acp
     from acp_compiler.acp_parser import ACPParseError, parse_acp_directory
-    from acp_compiler.acp_resolver import resolve_references
+    from acp_compiler.acp_resolver import add_module_symbols, resolve_references
     from acp_compiler.acp_validator import validate_acp
 
     directory = Path(directory)
@@ -270,8 +271,22 @@ def compile_acp_directory(
     except MergeError as e:
         raise CompilationError(f"Merge error: {e}") from e
 
-    # Resolve references
+    # Load modules if any are declared
+    loaded_modules: dict[str, LoadedModule] = {}
+    if acp_file.modules:
+        try:
+            loader = ModuleLoader(base_path=directory)
+            loaded_modules = loader.load_modules(acp_file.modules)
+        except ModuleLoadError as e:
+            raise CompilationError(f"Module load error: {e}") from e
+
+    # Resolve references (builds initial symbol table)
     resolution = resolve_references(acp_file)
+
+    # Add module symbols to the resolution result
+    for module_name, loaded_module in loaded_modules.items():
+        add_module_symbols(resolution, module_name, loaded_module.acp_file)
+
     if not resolution.is_valid:
         errors_str = "\n".join(f"  - {e}" for e in resolution.errors)
         raise CompilationError(f"Reference resolution failed:\n{errors_str}")
@@ -282,9 +297,9 @@ def compile_acp_directory(
         errors_str = "\n".join(f"  - {e}" for e in validation.errors)
         raise CompilationError(f"Validation failed:\n{errors_str}")
 
-    # Normalize to SpecRoot
+    # Normalize to SpecRoot (with module support)
     try:
-        spec = normalize_acp(acp_file, resolution, variables)
+        spec = normalize_acp(acp_file, resolution, variables, loaded_modules)
     except NormalizationError as e:
         raise CompilationError(f"Normalization error: {e}") from e
 
@@ -320,9 +335,10 @@ def validate_acp_directory(
         CompilationError: If parsing or merging fails
     """
     from acp_compiler.acp_ast import MergeError
+    from acp_compiler.acp_module_loader import LoadedModule, ModuleLoadError, ModuleLoader
     from acp_compiler.acp_normalizer import NormalizationError, normalize_acp
     from acp_compiler.acp_parser import ACPParseError, parse_acp_directory
-    from acp_compiler.acp_resolver import resolve_references
+    from acp_compiler.acp_resolver import add_module_symbols, resolve_references
     from acp_compiler.acp_validator import validate_acp
 
     directory = Path(directory)
@@ -341,8 +357,22 @@ def validate_acp_directory(
     except MergeError as e:
         raise CompilationError(f"Merge error: {e}") from e
 
+    # Load modules if any are declared
+    loaded_modules: dict[str, LoadedModule] = {}
+    if acp_file.modules:
+        try:
+            loader = ModuleLoader(base_path=directory)
+            loaded_modules = loader.load_modules(acp_file.modules)
+        except ModuleLoadError as e:
+            raise CompilationError(f"Module load error: {e}") from e
+
     # Resolve references
     resolution = resolve_references(acp_file)
+
+    # Add module symbols to the resolution result
+    for module_name, loaded_module in loaded_modules.items():
+        add_module_symbols(resolution, module_name, loaded_module.acp_file)
+
     if not resolution.is_valid:
         errors_str = "\n".join(f"  - {e}" for e in resolution.errors)
         raise CompilationError(f"Reference resolution failed:\n{errors_str}")
@@ -360,9 +390,9 @@ def validate_acp_directory(
     if not result.is_valid:
         return result
 
-    # Normalize and run standard validation
+    # Normalize and run standard validation (with module support)
     try:
-        spec = normalize_acp(acp_file, resolution, variables)
+        spec = normalize_acp(acp_file, resolution, variables, loaded_modules)
     except NormalizationError as e:
         result.add_error("normalization", str(e))
         return result
