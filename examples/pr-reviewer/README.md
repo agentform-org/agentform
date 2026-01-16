@@ -12,15 +12,9 @@ This example showcases advanced ACP features including:
 
 ## Prerequisites
 
-1. OpenAI API key:
-   ```bash
-   export OPENAI_API_KEY="your-api-key"
-   ```
+1. OpenAI API key (provided as a variable when running)
 
-2. GitHub Personal Access Token with appropriate permissions:
-   ```bash
-   export GITHUB_PERSONAL_ACCESS_TOKEN="your-github-token"
-   ```
+2. GitHub Personal Access Token (provided as a variable when running)
    
    Required token scopes:
    - `repo` (for private repositories)
@@ -36,7 +30,9 @@ This example showcases advanced ACP features including:
 Review a pull request:
 
 ```bash
-acp run review_pr --spec spec.acp --input-file input.yaml
+acp run review_pr --spec spec.acp --input-file input.yaml \
+  --var openai_api_key="your-api-key" \
+  --var github_personal_access_token="your-github-token"
 ```
 
 Or specify PR details inline:
@@ -46,7 +42,8 @@ acp run review_pr --spec spec.acp --input '{
   "owner": "myorg",
   "repo": "myrepo",
   "pr_number": 42
-}'
+}' --var openai_api_key="your-api-key" \
+  --var github_personal_access_token="your-github-token"
 ```
 
 The workflow will:
@@ -58,8 +55,38 @@ The workflow will:
 
 ## Spec File Structure
 
+### Variables
+Sensitive credentials are defined as variables:
+
+```hcl
+variable "openai_api_key" {
+  type        = string
+  description = "OpenAI API key"
+  sensitive   = true
+}
+
+variable "github_personal_access_token" {
+  type        = string
+  description = "GitHub Personal Access Token"
+  sensitive   = true
+}
+```
+
+### LLM Provider
+OpenAI provider configuration with default parameters:
+
+```hcl
+provider "llm.openai" "default" {
+  api_key = var.openai_api_key
+  default_params {
+    temperature = 0.3
+    max_tokens  = 4000
+  }
+}
+```
+
 ### Authenticated MCP Server
-GitHub server requires authentication via environment variable.
+GitHub server requires authentication via variable.
 
 ```hcl
 server "github" {
@@ -67,7 +94,7 @@ server "github" {
   transport = "stdio"
   command   = ["npx", "@modelcontextprotocol/server-github"]
   auth {
-    token = env("GITHUB_PERSONAL_ACCESS_TOKEN")  // Auth token from env
+    token = var.github_personal_access_token
   }
 }
 ```
@@ -95,6 +122,17 @@ capability "create_review" {
   method           = "create_pull_request_review"
   side_effect      = "write"
   requires_approval = true  // Human must approve before execution
+}
+```
+
+### Policy Configuration
+Budget limits for cost, capability calls, and execution time:
+
+```hcl
+policy "review_policy" {
+  budgets { max_cost_usd_per_run = 1.00 }
+  budgets { max_capability_calls = 10 }
+  budgets { timeout_seconds = 300 }
 }
 ```
 
@@ -188,10 +226,10 @@ workflow "review_pr" {
 
   // Step 4: Human approval gate
   step "approval" {
-    type      = "human_approval"
-    payload   = "state.review"        // Show this to the human
-    on_approve = step.submit_review   // If approved, continue
-    on_reject  = step.end             // If rejected, stop
+    type    = "human_approval"
+    payload = state.review
+    on_approve = step.submit_review
+    on_reject  = step.end
   }
 
   // Step 5: Submit the review
@@ -203,8 +241,8 @@ workflow "review_pr" {
       owner       = input.owner
       repo        = input.repo
       pull_number = input.pr_number
-      body        = state.review
-      event       = "COMMENT"  // COMMENT, APPROVE, or REQUEST_CHANGES
+      body        = state.review.response
+      event       = "COMMENT"
     }
 
     output "result" { from = result.data }
@@ -233,14 +271,14 @@ The `human_approval` step type pauses workflow execution and waits for human inp
 
 ```hcl
 step "approval" {
-  type      = "human_approval"
-  payload   = "state.review"      // Data to show the approver
-  on_approve = step.submit_review  // Next step if approved
-  on_reject  = step.end            // Next step if rejected
+  type    = "human_approval"
+  payload = state.review
+  on_approve = step.submit_review
+  on_reject  = step.end
 }
 ```
 
-This ensures humans remain in control of consequential actions.
+This ensures humans remain in control of consequential actions. After approval, the payload response is accessed via `.response` (e.g., `state.review.response`).
 
 ### Capability Approval
 Capabilities marked with `requires_approval = true` trigger approval prompts even during LLM agent tool use:
