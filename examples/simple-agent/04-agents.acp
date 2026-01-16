@@ -1,0 +1,14 @@
+// Agent definitions
+// Agents combine models, policies, and instructions
+
+agent "assistant" {
+  model           = model.gpt4o_mini
+  fallback_models = [model.gpt4o]
+
+  instructions = <<EOF
+You are a helpful assistant. Answer questions clearly and concisely.
+If you don't know something, say so.
+EOF
+
+  policy = policy.default
+}

@@ -1,0 +1,7 @@
+// Policy definitions
+// Policies define budget constraints and limits for agent execution
+
+policy "default" {
+  budgets { max_cost_usd_per_run = 0.50 }
+  budgets { timeout_seconds = 60 }
+}

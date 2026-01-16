@@ -93,16 +93,36 @@ def prompt_for_inputs(required_fields: set[str], existing_input: dict) -> dict:
     return result
 
 
-def _find_default_spec_file() -> Path:
-    """Find the default spec file in current directory.
+def _find_default_spec_path() -> Path:
+    """Find the default spec file or directory.
 
-    Looks for acp.acp first, then spec.acp.
+    Priority:
+    1. Current directory if it contains multiple .acp files
+    2. acp.acp file
+    3. spec.acp file
+    4. Current directory (fallback)
     """
+    cwd = Path(".")
+
+    # Check for .acp files in current directory
+    acp_files = list(cwd.glob("*.acp"))
+
+    # If multiple .acp files exist, use directory mode
+    if len(acp_files) > 1:
+        return cwd
+
+    # Single file: use specific files
     for name in ["acp.acp", "spec.acp"]:
         path = Path(name)
         if path.exists():
             return path
-    return Path("acp.acp")  # Default fallback
+
+    # If there's exactly one .acp file, use it
+    if len(acp_files) == 1:
+        return acp_files[0]
+
+    # Fallback to current directory (will error later if no .acp files)
+    return cwd
 
 
 def _parse_var(var_str: str) -> tuple[str, str]:
@@ -145,11 +165,9 @@ def _load_variables(
 
 def run(
     workflow: str = typer.Argument(help="Name of the workflow to run"),
-    spec_file: Path = typer.Option(
+    path: Path | None = typer.Argument(
         None,
-        "--spec",
-        "-s",
-        help="Path to the .acp specification file. Auto-detected if not provided.",
+        help="Path to .acp file or directory. Defaults to current directory.",
     ),
     input_data: str | None = typer.Option(
         None,
@@ -194,8 +212,11 @@ def run(
 ) -> None:
     """Run an ACP workflow.
 
+    Runs from the current directory by default, automatically discovering and
+    merging all .acp files (Terraform-style). Optionally specify a path.
+
     This will:
-    1. Compile the .acp specification
+    1. Discover and compile all .acp files
     2. Connect to MCP servers (if any)
     3. Execute the specified workflow
     4. Output the result
@@ -204,20 +225,30 @@ def run(
     configure_logging(verbose=verbose)
     logger = get_logger("acp_cli.run")
 
-    # Auto-detect spec file if not provided
-    if spec_file is None:
-        spec_file = _find_default_spec_file()
+    # Auto-detect spec path if not provided
+    if path is None:
+        spec_path = _find_default_spec_path()
+    else:
+        spec_path = path
 
-    logger.info("workflow_run_start", workflow=workflow, spec_file=str(spec_file), verbose=verbose)
+    # Check spec path exists
+    if not spec_path.exists():
+        path_type = "directory" if spec_path.suffix == "" else "file"
+        logger.error("spec_path_not_found", spec_path=str(spec_path))
+        console.print(f"[red]Spec {path_type} not found:[/red] {spec_path}")
+        raise typer.Exit(1)
+
+    # Determine if input is file or directory
+    is_directory = spec_path.is_dir()
+
+    logger.info("workflow_run_start", workflow=workflow, spec_path=str(spec_path), verbose=verbose)
 
     console.print(f"\n[bold]Running workflow:[/bold] {workflow}")
-    console.print(f"[bold]Spec file:[/bold] {spec_file}\n")
-
-    # Check spec file exists
-    if not spec_file.exists():
-        logger.error("spec_file_not_found", spec_file=str(spec_file))
-        console.print(f"[red]Spec file not found:[/red] {spec_file}")
-        raise typer.Exit(1)
+    if is_directory:
+        acp_files = list(spec_path.glob("*.acp"))
+        console.print(f"[bold]Using {len(acp_files)} .acp file(s) from:[/bold] {spec_path.resolve()}\n")
+    else:
+        console.print(f"[bold]Using spec:[/bold] {spec_path}\n")
 
     # Load variables
     try:
@@ -272,18 +303,21 @@ def run(
             console.print()
 
     # Compile
-    logger.info("compilation_start", spec_file=str(spec_file))
+    logger.info("compilation_start", spec_path=str(spec_path))
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),
         console=console,
         transient=True,
     ) as progress:
-        progress.add_task("Compiling specification...", total=None)
+        task_desc = "Compiling specification..."
+        if is_directory:
+            task_desc = "Compiling specification (merging files)..."
+        progress.add_task(task_desc, total=None)
 
         try:
             compiled = compile_file(
-                spec_file,
+                spec_path,
                 check_env=True,
                 resolve_credentials=True,
                 variables=variables,

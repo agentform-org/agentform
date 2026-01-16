@@ -34,6 +34,7 @@ from acp_compiler.acp_ast import (
     VariableBlock,
     VarRef,
     WorkflowBlock,
+    merge_acp_files,
 )
 
 
@@ -623,3 +624,78 @@ def parse_acp_file(path: str | Path) -> ACPFile:
         raise ACPParseError(f"Failed to read file: {e}") from e
 
     return parse_acp(content, file_path=str(path))
+
+
+# ============================================================================
+# Multi-File / Directory Parsing
+# ============================================================================
+
+
+def discover_acp_files(directory: str | Path) -> list[Path]:
+    """Discover all .acp files in a directory.
+
+    Files are sorted alphabetically for consistent ordering.
+    Only searches the top-level directory (non-recursive).
+
+    Args:
+        directory: Path to directory to search
+
+    Returns:
+        List of paths to .acp files, sorted alphabetically
+
+    Raises:
+        ACPParseError: If directory does not exist or is not a directory
+    """
+    directory = Path(directory)
+
+    if not directory.exists():
+        raise ACPParseError(f"Directory not found: {directory}")
+
+    if not directory.is_dir():
+        raise ACPParseError(f"Path is not a directory: {directory}")
+
+    # Find all .acp files (case-insensitive extension matching)
+    acp_files = [
+        f for f in directory.iterdir() if f.is_file() and f.suffix.lower() == ".acp"
+    ]
+
+    # Sort alphabetically for consistent ordering
+    return sorted(acp_files)
+
+
+def parse_acp_directory(directory: str | Path) -> ACPFile:
+    """Parse all .acp files in a directory and merge them into a single AST.
+
+    This function:
+    1. Discovers all .acp files in the directory
+    2. Parses each file individually
+    3. Merges all ASTs into a single ACPFile
+
+    Files are processed in alphabetical order for consistent results.
+
+    Args:
+        directory: Path to directory containing .acp files
+
+    Returns:
+        Merged ACPFile AST containing all blocks from all files
+
+    Raises:
+        ACPParseError: If no .acp files found, parsing fails, or merge fails
+        MergeError: If merging fails (duplicate symbols, multiple acp blocks, etc.)
+    """
+    directory = Path(directory)
+
+    # Discover all .acp files
+    acp_files = discover_acp_files(directory)
+
+    if not acp_files:
+        raise ACPParseError(f"No .acp files found in directory: {directory}")
+
+    # Parse each file
+    parsed_files: list[ACPFile] = []
+    for file_path in acp_files:
+        parsed_files.append(parse_acp_file(file_path))
+
+    # Merge all files into one
+    # MergeError will be raised if validation fails
+    return merge_acp_files(parsed_files)

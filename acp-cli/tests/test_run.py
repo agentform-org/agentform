@@ -214,9 +214,9 @@ class TestRunCommand:
 
     def test_run_nonexistent_spec_file(self):
         """Test running with a spec file that doesn't exist."""
-        result = runner.invoke(app, ["run", "test-workflow", "--spec", "nonexistent.acp"])
+        result = runner.invoke(app, ["run", "test-workflow", "nonexistent.acp"])
         assert result.exit_code == 1
-        assert "Spec file not found" in result.stdout
+        assert "not found" in result.stdout.lower()
 
     def test_run_with_invalid_input_json(self):
         """Test running with invalid JSON input."""
@@ -238,7 +238,7 @@ workflow "test-workflow" {
         try:
             result = runner.invoke(
                 app,
-                ["run", "test-workflow", "--spec", str(spec_path), "--input", "invalid json {"],
+                ["run", "test-workflow", str(spec_path), "--input", "invalid json {"],
             )
             assert result.exit_code == 1
             assert "Error parsing input JSON" in result.stdout
@@ -276,7 +276,6 @@ workflow "test-workflow" {
                     [
                         "run",
                         "test-workflow",
-                        "--spec",
                         str(spec_path),
                         "--input-file",
                         str(input_path),
@@ -308,7 +307,7 @@ workflow "existing-workflow" {
         try:
             result = runner.invoke(
                 app,
-                ["run", "nonexistent-workflow", "--spec", str(spec_path)],
+                ["run", "nonexistent-workflow", str(spec_path)],
             )
             assert result.exit_code == 1
             assert "not found" in result.stdout.lower()
@@ -345,11 +344,9 @@ workflow "test-workflow" {
                 [
                     "run",
                     "test-workflow",
-                    "--spec",
                     str(spec_path),
                     "--output",
                     str(output_path),
-                    "--no-check-env",
                 ],
             )
             # Should create output file if workflow runs successfully

@@ -1,0 +1,8 @@
+// Variable definitions
+// Variables should be defined early since they're referenced by other blocks
+
+variable "openai_api_key" {
+  type        = string
+  description = "OpenAI API key"
+  sensitive   = true
+}

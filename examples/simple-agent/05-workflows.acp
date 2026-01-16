@@ -1,0 +1,19 @@
+// Workflow definitions
+// Workflows define the execution flow using steps
+
+workflow "ask" {
+  entry = step.process
+
+  step "process" {
+    type  = "llm"
+    agent = agent.assistant
+
+    input { question = input.question }
+
+    output "answer" { from = result.text }
+
+    next = step.end
+  }
+
+  step "end" { type = "end" }
+}

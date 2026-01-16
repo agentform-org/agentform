@@ -17,7 +17,7 @@ class TestValidateCommand:
         """Test validating a file that doesn't exist."""
         result = runner.invoke(app, ["validate", "nonexistent.acp"])
         assert result.exit_code == 1
-        assert "File not found" in result.stdout
+        assert "Path not found" in result.stdout
 
     def test_validate_invalid_yaml(self):
         """Test validating invalid ACP."""

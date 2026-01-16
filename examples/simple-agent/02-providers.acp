@@ -1,0 +1,23 @@
+// Provider and model definitions
+// Providers configure LLM backends, models define specific model configurations
+
+provider "llm.openai" "default" {
+  api_key = var.openai_api_key
+  default_params {
+    temperature = 0.7
+    max_tokens  = 2000
+  }
+}
+
+model "gpt4o_mini" {
+  provider = provider.llm.openai.default
+  id       = "gpt-4o-mini"
+  params {
+    temperature = 0.5
+  }
+}
+
+model "gpt4o" {
+  provider = provider.llm.openai.default
+  id       = "gpt-4o"
+}

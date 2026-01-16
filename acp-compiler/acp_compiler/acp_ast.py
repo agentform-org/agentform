@@ -497,3 +497,182 @@ class ACPFile(ASTNode):
             if variable.name == name:
                 return variable
         return None
+
+
+# ============================================================================
+# Multi-File Merging
+# ============================================================================
+
+
+class MergeError(Exception):
+    """Error during merging of multiple ACP files."""
+
+    def __init__(self, message: str, locations: list[SourceLocation] | None = None):
+        self.locations = locations or []
+        if self.locations:
+            loc_strs = [str(loc) for loc in self.locations]
+            super().__init__(f"{message} (in {', '.join(loc_strs)})")
+        else:
+            super().__init__(message)
+
+
+def _format_location(loc: SourceLocation | None) -> str:
+    """Format a location for error messages."""
+    if loc and loc.file:
+        return f"{loc.file}:{loc.line}"
+    elif loc:
+        return f"line {loc.line}"
+    return "unknown location"
+
+
+def merge_acp_files(files: list[ACPFile]) -> ACPFile:
+    """Merge multiple ACPFile ASTs into a single ACPFile.
+
+    This function combines all blocks from multiple .acp files into one,
+    validating that:
+    - Exactly one 'acp {}' metadata block exists across all files
+    - No duplicate symbols exist (variables, providers, servers, etc.)
+
+    Args:
+        files: List of parsed ACPFile objects to merge
+
+    Returns:
+        A single merged ACPFile containing all blocks
+
+    Raises:
+        MergeError: If validation fails (multiple acp blocks, no acp block, duplicates)
+    """
+    if not files:
+        raise MergeError("No ACP files to merge")
+
+    if len(files) == 1:
+        # Single file, just validate it has an acp block
+        if files[0].acp is None:
+            raise MergeError(
+                "No 'acp' metadata block found. One file must contain an 'acp {}' block."
+            )
+        return files[0]
+
+    # Collect all acp blocks
+    acp_blocks: list[tuple[ACPBlock, SourceLocation | None]] = []
+    for f in files:
+        if f.acp is not None:
+            acp_blocks.append((f.acp, f.acp.location))
+
+    # Validate exactly one acp block
+    if len(acp_blocks) == 0:
+        raise MergeError(
+            "No 'acp' metadata block found. One file must contain an 'acp {}' block."
+        )
+    elif len(acp_blocks) > 1:
+        locations = [loc for _, loc in acp_blocks if loc]
+        loc_strs = [_format_location(loc) for loc in locations]
+        raise MergeError(
+            f"Multiple 'acp' blocks found: {', '.join(loc_strs)}. Only one is allowed."
+        )
+
+    # Create merged file with the single acp block
+    merged = ACPFile(acp=acp_blocks[0][0])
+
+    # Track seen symbols for duplicate detection
+    seen_variables: dict[str, SourceLocation | None] = {}
+    seen_providers: dict[str, SourceLocation | None] = {}
+    seen_servers: dict[str, SourceLocation | None] = {}
+    seen_capabilities: dict[str, SourceLocation | None] = {}
+    seen_policies: dict[str, SourceLocation | None] = {}
+    seen_models: dict[str, SourceLocation | None] = {}
+    seen_agents: dict[str, SourceLocation | None] = {}
+    seen_workflows: dict[str, SourceLocation | None] = {}
+
+    # Merge all files
+    for f in files:
+        # Merge variables
+        for var in f.variables:
+            if var.name in seen_variables:
+                existing_loc = _format_location(seen_variables[var.name])
+                new_loc = _format_location(var.location)
+                raise MergeError(
+                    f"Duplicate variable '{var.name}' defined in both {existing_loc} and {new_loc}"
+                )
+            seen_variables[var.name] = var.location
+            merged.variables.append(var)
+
+        # Merge providers
+        for provider in f.providers:
+            key = provider.full_name
+            if key in seen_providers:
+                existing_loc = _format_location(seen_providers[key])
+                new_loc = _format_location(provider.location)
+                raise MergeError(
+                    f"Duplicate provider '{key}' defined in both {existing_loc} and {new_loc}"
+                )
+            seen_providers[key] = provider.location
+            merged.providers.append(provider)
+
+        # Merge servers
+        for server in f.servers:
+            if server.name in seen_servers:
+                existing_loc = _format_location(seen_servers[server.name])
+                new_loc = _format_location(server.location)
+                raise MergeError(
+                    f"Duplicate server '{server.name}' defined in both {existing_loc} and {new_loc}"
+                )
+            seen_servers[server.name] = server.location
+            merged.servers.append(server)
+
+        # Merge capabilities
+        for cap in f.capabilities:
+            if cap.name in seen_capabilities:
+                existing_loc = _format_location(seen_capabilities[cap.name])
+                new_loc = _format_location(cap.location)
+                raise MergeError(
+                    f"Duplicate capability '{cap.name}' defined in both {existing_loc} and {new_loc}"
+                )
+            seen_capabilities[cap.name] = cap.location
+            merged.capabilities.append(cap)
+
+        # Merge policies
+        for policy in f.policies:
+            if policy.name in seen_policies:
+                existing_loc = _format_location(seen_policies[policy.name])
+                new_loc = _format_location(policy.location)
+                raise MergeError(
+                    f"Duplicate policy '{policy.name}' defined in both {existing_loc} and {new_loc}"
+                )
+            seen_policies[policy.name] = policy.location
+            merged.policies.append(policy)
+
+        # Merge models
+        for model in f.models:
+            if model.name in seen_models:
+                existing_loc = _format_location(seen_models[model.name])
+                new_loc = _format_location(model.location)
+                raise MergeError(
+                    f"Duplicate model '{model.name}' defined in both {existing_loc} and {new_loc}"
+                )
+            seen_models[model.name] = model.location
+            merged.models.append(model)
+
+        # Merge agents
+        for agent in f.agents:
+            if agent.name in seen_agents:
+                existing_loc = _format_location(seen_agents[agent.name])
+                new_loc = _format_location(agent.location)
+                raise MergeError(
+                    f"Duplicate agent '{agent.name}' defined in both {existing_loc} and {new_loc}"
+                )
+            seen_agents[agent.name] = agent.location
+            merged.agents.append(agent)
+
+        # Merge workflows
+        for workflow in f.workflows:
+            if workflow.name in seen_workflows:
+                existing_loc = _format_location(seen_workflows[workflow.name])
+                new_loc = _format_location(workflow.location)
+                raise MergeError(
+                    f"Duplicate workflow '{workflow.name}' defined in both {existing_loc} and {new_loc}"
+                )
+            seen_workflows[workflow.name] = workflow.location
+            merged.workflows.append(workflow)
+
+    return merged

@@ -13,6 +13,38 @@ from acp_compiler.compiler import CompilationError
 console = Console()
 
 
+def _find_default_spec_path() -> Path:
+    """Find the default spec file or directory.
+
+    Priority:
+    1. Current directory if it contains multiple .acp files
+    2. acp.acp file
+    3. spec.acp file
+    4. Current directory (fallback)
+    """
+    cwd = Path(".")
+
+    # Check for .acp files in current directory
+    acp_files = list(cwd.glob("*.acp"))
+
+    # If multiple .acp files exist, use directory mode
+    if len(acp_files) > 1:
+        return cwd
+
+    # Single file: use specific files
+    for name in ["acp.acp", "spec.acp"]:
+        path = Path(name)
+        if path.exists():
+            return path
+
+    # If there's exactly one .acp file, use it
+    if len(acp_files) == 1:
+        return acp_files[0]
+
+    # Fallback to current directory (will error later if no .acp files)
+    return cwd
+
+
 def _parse_var(var_str: str) -> tuple[str, str]:
     """Parse a variable string in the form 'name=value'."""
     if "=" not in var_str:
@@ -54,7 +86,10 @@ def _load_variables(
 
 
 def compile_cmd(
-    spec_file: Path = typer.Argument(help="Path to the .acp specification file"),
+    spec_path: Path | None = typer.Argument(
+        None,
+        help="Path to .acp file or directory. Defaults to current directory.",
+    ),
     output: Path | None = typer.Option(
         None,
         "--output",
@@ -94,16 +129,30 @@ def compile_cmd(
 ) -> None:
     """Compile an ACP specification to IR (Intermediate Representation).
 
+    Runs from the current directory by default, automatically discovering and
+    merging all .acp files (Terraform-style).
+
     Outputs the compiled IR as JSON, useful for debugging and tooling.
     """
     # Handle the two flags
     should_check_env = check_env and not no_check_env
 
-    console.print(f"\n[bold]Compiling:[/bold] {spec_file}\n")
+    # Auto-detect spec path if not provided
+    if spec_path is None:
+        spec_path = _find_default_spec_path()
 
-    # Check file exists
-    if not spec_file.exists():
-        console.print(f"[red]✗[/red] File not found: {spec_file}")
+    # Determine if input is file or directory
+    is_directory = spec_path.is_dir()
+
+    if is_directory:
+        acp_files = list(spec_path.glob("*.acp"))
+        console.print(f"\n[bold]Compiling {len(acp_files)} .acp file(s) from:[/bold] {spec_path.resolve()}\n")
+    else:
+        console.print(f"\n[bold]Compiling:[/bold] {spec_path}\n")
+
+    # Check path exists
+    if not spec_path.exists():
+        console.print(f"[red]✗[/red] Path not found: {spec_path}")
         raise typer.Exit(1)
 
     # Load variables
@@ -116,12 +165,15 @@ def compile_cmd(
     # Compile
     try:
         compiled = compile_file(
-            spec_file,
+            spec_path,
             check_env=should_check_env,
             resolve_credentials=resolve_credentials,
             variables=variables,
         )
-        console.print("[green]✓[/green] Compilation successful")
+        if is_directory:
+            console.print("[green]✓[/green] Compilation successful (merged from directory)")
+        else:
+            console.print("[green]✓[/green] Compilation successful")
     except CompilationError as e:
         console.print(f"[red]✗[/red] Compilation failed:\n{e}")
         raise typer.Exit(1) from None
