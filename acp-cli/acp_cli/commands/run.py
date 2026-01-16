@@ -352,6 +352,20 @@ def run(
     required_inputs = extract_input_fields(workflow_config)
     logger.info("workflow_config_loaded", workflow=workflow, required_inputs=list(required_inputs))
 
+    # Auto-populate input from variables when names match
+    if required_inputs and variables:
+        for field in required_inputs:
+            if field not in parsed_input and field in variables:
+                # Convert pr_number to int if it looks like a number
+                value = variables[field]
+                if field == "pr_number" or (value.isdigit()):
+                    try:
+                        value = int(value)
+                    except ValueError:
+                        pass
+                parsed_input[field] = value
+                logger.info("input_auto_populated_from_var", field=field)
+
     if required_inputs and not parsed_input:
         # No input provided at all, prompt for all required fields
         logger.info("prompting_for_inputs", required_fields=list(required_inputs))
