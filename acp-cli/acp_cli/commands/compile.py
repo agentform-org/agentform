@@ -22,7 +22,7 @@ def _find_default_spec_path() -> Path:
     3. spec.acp file
     4. Current directory (fallback)
     """
-    cwd = Path(".")
+    cwd = Path()
 
     # Check for .acp files in current directory
     acp_files = list(cwd.glob("*.acp"))

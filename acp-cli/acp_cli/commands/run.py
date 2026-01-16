@@ -102,7 +102,7 @@ def _find_default_spec_path() -> Path:
     3. spec.acp file
     4. Current directory (fallback)
     """
-    cwd = Path(".")
+    cwd = Path()
 
     # Check for .acp files in current directory
     acp_files = list(cwd.glob("*.acp"))
@@ -226,10 +226,7 @@ def run(
     logger = get_logger("acp_cli.run")
 
     # Auto-detect spec path if not provided
-    if path is None:
-        spec_path = _find_default_spec_path()
-    else:
-        spec_path = path
+    spec_path = _find_default_spec_path() if path is None else path
 
     # Check spec path exists
     if not spec_path.exists():
