@@ -19,6 +19,7 @@ acp run <workflow> --var openai_api_key=$OPENAI_API_KEY --input-file input.yaml
 | Example | Difficulty | Description |
 |---------|------------|-------------|
 | [simple-agent](#simple-agent) | Beginner | Basic LLM agent answering questions |
+| [python-api](#python-api) | Beginner | Using ACP programmatically from Python |
 | [multi-agent](#multi-agent) | Intermediate | Multiple agents with conditional routing |
 | [filesystem-agent](#filesystem-agent) | Intermediate | File operations via MCP server |
 | [pr-reviewer](#pr-reviewer) | Advanced | GitHub PR reviews with human approval |
@@ -56,6 +57,62 @@ The simplest possible ACP configuration. A single agent that answers questions u
 cd examples/simple-agent
 acp run ask --var openai_api_key=$OPENAI_API_KEY --input '{"question": "What is ACP?"}'
 ```
+
+---
+
+## Python API
+
+**Directory:** [`python-api/`](python-api/)
+
+Use ACP workflows programmatically from Python applications using the `acp-api` package.
+
+### What You'll Learn
+
+- Loading ACP specs from Python code
+- Running workflows programmatically
+- Using async context managers for resource cleanup
+- Error handling patterns
+- Integrating ACP into web applications (FastAPI example)
+
+### Features Used
+
+- `acp-api` Python SDK
+- Async/await patterns
+- Context managers for resource cleanup
+- Error handling with custom exceptions
+- Web framework integration
+
+### Prerequisites
+
+- Python 3.11+
+- `acp-api` package: `pip install acp-api`
+- OpenAI API key
+
+### Run It
+
+```bash
+cd examples/python-api
+
+# Basic usage
+python basic_usage.py
+
+# With context manager
+python context_manager.py
+
+# Error handling example
+python error_handling.py
+
+# FastAPI web server
+pip install fastapi uvicorn
+python fastapi_example.py
+```
+
+### Use Cases
+
+- Web applications (FastAPI, Flask, Django)
+- Background job processors (Celery, RQ)
+- Scripts and automation tools
+- Testing workflows programmatically
 
 ---
 
