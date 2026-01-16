@@ -1,0 +1,7 @@
+// Policy definitions
+
+policy "filesystem_policy" {
+  budgets { max_cost_usd_per_run = 0.50 }
+  budgets { max_capability_calls = 20 }
+  budgets { timeout_seconds = 120 }
+}

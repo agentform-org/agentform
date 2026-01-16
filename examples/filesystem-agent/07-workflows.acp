@@ -1,0 +1,102 @@
+// Workflow definitions
+
+// Workflow: Read a file and summarize its contents
+workflow "read_and_summarize" {
+  entry = step.read
+
+  step "read" {
+    type       = "call"
+    capability = capability.read_file
+
+    args { path = input.file_path }
+
+    output "file_content" { from = result.data }
+
+    next = step.summarize
+  }
+
+  step "summarize" {
+    type  = "llm"
+    agent = agent.file_assistant
+
+    input {
+      file_path = input.file_path
+      content   = state.file_content
+      task      = input.task
+    }
+
+    output "summary" { from = result.text }
+
+    next = step.end
+  }
+
+  step "end" { type = "end" }
+}
+
+// Workflow: Prepare content and write to file
+workflow "write_file" {
+  entry = step.prepare
+
+  step "prepare" {
+    type  = "llm"
+    agent = agent.file_assistant
+
+    input {
+      file_path    = input.file_path
+      instructions = input.instructions
+    }
+
+    output "file_data" { from = result.text }
+
+    next = step.write
+  }
+
+  step "write" {
+    type       = "call"
+    capability = capability.write_file
+
+    args {
+      path     = input.file_path
+      contents = state.file_data
+    }
+
+    output "result" { from = result.data }
+
+    next = step.end
+  }
+
+  step "end" { type = "end" }
+}
+
+// Workflow: List directory and analyze contents
+workflow "list_and_read" {
+  entry = step.list
+
+  step "list" {
+    type       = "call"
+    capability = capability.list_directory
+
+    args { path = input.directory_path }
+
+    output "directory_contents" { from = result.data }
+
+    next = step.analyze
+  }
+
+  step "analyze" {
+    type  = "llm"
+    agent = agent.file_assistant
+
+    input {
+      directory_path = input.directory_path
+      files          = state.directory_contents
+      task           = input.task
+    }
+
+    output "analysis" { from = result.text }
+
+    next = step.end
+  }
+
+  step "end" { type = "end" }
+}

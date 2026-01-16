@@ -1,0 +1,21 @@
+// Agent definitions
+
+agent "file_assistant" {
+  model           = model.gpt4o_mini
+  fallback_models = [model.gpt4o]
+
+  instructions = <<EOF
+You are a helpful file assistant. You can read, write, and analyze files.
+
+When working with files:
+- Read files to understand their content
+- Write files with clear, well-formatted content
+- List directories to explore file structure
+- Always be careful with file operations
+
+Provide clear summaries of file contents when asked.
+EOF
+
+  allow  = [capability.read_file, capability.write_file, capability.list_directory]
+  policy = policy.filesystem_policy
+}

@@ -1,0 +1,22 @@
+// Provider and model definitions
+
+provider "llm.openai" "default" {
+  api_key = var.openai_api_key
+  default_params {
+    temperature = 0.3
+    max_tokens  = 4000
+  }
+}
+
+model "gpt4o_mini" {
+  provider = provider.llm.openai.default
+  id       = "gpt-4o-mini"
+  params {
+    temperature = 0.3
+  }
+}
+
+model "gpt4o" {
+  provider = provider.llm.openai.default
+  id       = "gpt-4o"
+}

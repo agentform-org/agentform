@@ -1,0 +1,13 @@
+// Variable definitions
+
+variable "openai_api_key" {
+  type        = string
+  description = "OpenAI API key"
+  sensitive   = true
+}
+
+variable "github_personal_access_token" {
+  type        = string
+  description = "GitHub Personal Access Token"
+  sensitive   = true
+}

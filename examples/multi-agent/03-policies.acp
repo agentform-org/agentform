@@ -1,0 +1,12 @@
+// Policy definitions
+// Different policies for different use cases
+
+policy "fast" {
+  budgets { max_cost_usd_per_run = 0.10 }
+  budgets { timeout_seconds = 30 }
+}
+
+policy "thorough" {
+  budgets { max_cost_usd_per_run = 1.00 }
+  budgets { timeout_seconds = 120 }
+}

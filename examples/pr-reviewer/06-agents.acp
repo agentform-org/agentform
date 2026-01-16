@@ -1,0 +1,22 @@
+// Agent definitions
+
+agent "reviewer" {
+  model = model.gpt4o
+
+  instructions = <<EOF
+You are an expert code reviewer. Review pull requests thoroughly.
+
+Focus on:
+- Code quality and best practices
+- Potential bugs or edge cases
+- Performance implications
+- Security concerns
+- Documentation and readability
+
+Be constructive and specific in your feedback.
+Suggest improvements where possible.
+EOF
+
+  allow  = [capability.get_pr, capability.list_pr_files, capability.create_review]
+  policy = policy.review_policy
+}

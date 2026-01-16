@@ -1,0 +1,7 @@
+// Policy definitions
+
+policy "review_policy" {
+  budgets { max_cost_usd_per_run = 1.00 }
+  budgets { max_capability_calls = 10 }
+  budgets { timeout_seconds = 300 }
+}

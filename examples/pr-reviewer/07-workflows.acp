@@ -1,0 +1,75 @@
+// Workflow definitions
+
+workflow "review_pr" {
+  entry = step.fetch_pr
+
+  step "fetch_pr" {
+    type       = "call"
+    capability = capability.get_pr
+
+    args {
+      owner       = input.owner
+      repo        = input.repo
+      pull_number = input.pr_number
+    }
+
+    output "pr_data" { from = result.data }
+
+    next = step.fetch_files
+  }
+
+  step "fetch_files" {
+    type       = "call"
+    capability = capability.list_pr_files
+
+    args {
+      owner       = input.owner
+      repo        = input.repo
+      pull_number = input.pr_number
+    }
+
+    output "pr_files" { from = result.data }
+
+    next = step.analyze
+  }
+
+  step "analyze" {
+    type  = "llm"
+    agent = agent.reviewer
+
+    input {
+      pr    = state.pr_data
+      files = state.pr_files
+    }
+
+    output "review" { from = result.text }
+
+    next = step.approval
+  }
+
+  step "approval" {
+    type    = "human_approval"
+    payload = state.review
+    on_approve = step.submit_review
+    on_reject  = step.end
+  }
+
+  step "submit_review" {
+    type       = "call"
+    capability = capability.create_review
+
+    args {
+      owner       = input.owner
+      repo        = input.repo
+      pull_number = input.pr_number
+      body        = state.review.response
+      event       = "COMMENT"
+    }
+
+    output "result" { from = result.data }
+
+    next = step.end
+  }
+
+  step "end" { type = "end" }
+}

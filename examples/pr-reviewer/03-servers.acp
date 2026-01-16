@@ -1,0 +1,10 @@
+// MCP server definitions
+
+server "github" {
+  type      = "mcp"
+  transport = "stdio"
+  command   = ["npx", "@modelcontextprotocol/server-github"]
+  auth {
+    token = var.github_personal_access_token
+  }
+}

@@ -1,0 +1,20 @@
+// Capability definitions
+
+capability "get_pr" {
+  server      = server.github
+  method      = "get_pull_request"
+  side_effect = "read"
+}
+
+capability "list_pr_files" {
+  server      = server.github
+  method      = "get_pull_request_files"
+  side_effect = "read"
+}
+
+capability "create_review" {
+  server           = server.github
+  method           = "create_pull_request_review"
+  side_effect      = "write"
+  requires_approval = true
+}

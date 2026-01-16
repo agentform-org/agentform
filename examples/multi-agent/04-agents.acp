@@ -1,0 +1,49 @@
+// Agent definitions
+// Specialized agents for different tasks
+
+// Classifier agent - quickly categorizes tasks
+agent "classifier" {
+  model = model.gpt4o_mini
+
+  instructions = <<EOF
+You are a task classifier. Analyze the input and classify it.
+
+Categories:
+- "simple": Basic questions, greetings, simple tasks
+- "complex": Research, analysis, multi-step tasks
+
+Respond with ONLY the category name, nothing else.
+EOF
+
+  policy = policy.fast
+}
+
+// Quick responder - handles simple tasks
+agent "quick_responder" {
+  model = model.gpt4o
+
+  instructions = <<EOF
+You are a quick assistant. Give brief, helpful responses.
+Keep answers concise and to the point.
+EOF
+
+  policy = policy.fast
+}
+
+// Deep analyst - handles complex tasks
+agent "deep_analyst" {
+  model = model.claude_sonnet
+
+  instructions = <<EOF
+You are a thorough analyst. Provide detailed, well-researched responses.
+
+Structure your response with:
+1. Summary
+2. Detailed analysis
+3. Recommendations
+
+Be comprehensive and cite reasoning.
+EOF
+
+  policy = policy.thorough
+}

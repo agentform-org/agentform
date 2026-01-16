@@ -1,0 +1,21 @@
+// Capability definitions
+// Map server methods to named capabilities with defined side effects
+
+capability "read_file" {
+  server      = server.filesystem
+  method      = "read_file"
+  side_effect = "read"
+}
+
+capability "write_file" {
+  server           = server.filesystem
+  method           = "write_file"
+  side_effect      = "write"
+  requires_approval = true
+}
+
+capability "list_directory" {
+  server      = server.filesystem
+  method      = "list_directory"
+  side_effect = "read"
+}

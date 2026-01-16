@@ -1,0 +1,48 @@
+// Workflow definitions
+
+// Smart routing workflow
+workflow "smart_respond" {
+  entry = step.classify
+
+  step "classify" {
+    type  = "llm"
+    agent = agent.classifier
+
+    input { task = input.task }
+
+    output "classification" { from = result.text }
+
+    next = step.route
+  }
+
+  step "route" {
+    type      = "condition"
+    condition = $state.classification.response == "simple"
+    on_true   = step.quick_response
+    on_false  = step.deep_response
+  }
+
+  step "quick_response" {
+    type  = "llm"
+    agent = agent.quick_responder
+
+    input { task = input.task }
+
+    output "response" { from = result.text }
+
+    next = step.end
+  }
+
+  step "deep_response" {
+    type  = "llm"
+    agent = agent.deep_analyst
+
+    input { task = input.task }
+
+    output "response" { from = result.text }
+
+    next = step.end
+  }
+
+  step "end" { type = "end" }
+}

@@ -6,8 +6,6 @@ A minimal ACP example demonstrating a basic LLM-powered agent that answers quest
 
 This is the simplest possible ACP configuration—a single agent with no external capabilities. It showcases the core concepts of ACP specification without the complexity of MCP servers or multi-agent workflows.
 
-This example also demonstrates **multi-file ACP support** (Terraform-style), where the specification is split across multiple `.acp` files that are automatically merged during compilation.
-
 ## File Structure
 
 ```
@@ -26,27 +24,23 @@ Files are processed in alphabetical order, so we use numbered prefixes to ensure
 
 ## Prerequisites
 
-- OpenAI API key set as environment variable:
-  ```bash
-  export OPENAI_API_KEY="your-api-key"
-  ```
+1. OpenAI API key
 
 ## Usage
 
-Run from the example directory (all `.acp` files are discovered automatically):
+Run from the example directory:
 
 ```bash
 cd examples/simple-agent
+
+# Run with provided input
 acp run ask --var openai_api_key=$OPENAI_API_KEY --input-file input.yaml
-```
 
-Or provide inline input:
-
-```bash
+# Or provide inline input
 acp run ask --var openai_api_key=$OPENAI_API_KEY --input '{"question": "What is the meaning of life?"}'
 ```
 
-To validate the specification:
+To validate:
 
 ```bash
 acp validate --var openai_api_key=test
@@ -58,20 +52,11 @@ To compile and see the IR:
 acp compile --var openai_api_key=test
 ```
 
-## Spec File Structure
+## Key Concepts
 
-### `00-project.acp` - Project Metadata
-Specifies the ACP specification version and project name.
+### Variables (`01-variables.acp`)
 
-```hcl
-acp {
-  version = "0.1"
-  project = "simple-agent-example"
-}
-```
-
-### `01-variables.acp` - Variables
-Define variables that can be provided at runtime. Sensitive variables (like API keys) should not have defaults.
+Define variables that can be provided at runtime:
 
 ```hcl
 variable "openai_api_key" {
@@ -81,8 +66,9 @@ variable "openai_api_key" {
 }
 ```
 
-### `02-providers.acp` - Providers & Models
-Configures LLM providers and model definitions.
+### Providers & Models (`02-providers.acp`)
+
+Configure LLM providers and model definitions:
 
 ```hcl
 provider "llm.openai" "default" {
@@ -96,14 +82,13 @@ provider "llm.openai" "default" {
 model "gpt4o_mini" {
   provider = provider.llm.openai.default
   id       = "gpt-4o-mini"
-  params {
-    temperature = 0.5
-  }
+  params { temperature = 0.5 }
 }
 ```
 
-### `03-policies.acp` - Policies
-Define resource constraints and budgets for agent execution.
+### Policies (`03-policies.acp`)
+
+Define resource constraints and budgets:
 
 ```hcl
 policy "default" {
@@ -112,8 +97,9 @@ policy "default" {
 }
 ```
 
-### `04-agents.acp` - Agents
-Configure agents with their models, instructions, and capabilities.
+### Agents (`04-agents.acp`)
+
+Configure agents with models, instructions, and policies:
 
 ```hcl
 agent "assistant" {
@@ -122,15 +108,15 @@ agent "assistant" {
 
   instructions = <<EOF
 You are a helpful assistant. Answer questions clearly and concisely.
-If you don't know something, say so.
 EOF
 
   policy = policy.default
 }
 ```
 
-### `05-workflows.acp` - Workflows
-Define the execution flow using steps.
+### Workflows (`05-workflows.acp`)
+
+Define execution flow using steps:
 
 ```hcl
 workflow "ask" {
@@ -139,10 +125,8 @@ workflow "ask" {
   step "process" {
     type  = "llm"
     agent = agent.assistant
-
     input { question = input.question }
     output "answer" { from = result.text }
-
     next = step.end
   }
 
@@ -152,14 +136,10 @@ workflow "ask" {
 
 ## Input Schema
 
-The workflow expects input with the following structure:
-
 ```json
-{
-  "question": "Your question here"
-}
+{ "question": "Your question here" }
 ```
 
 ## Output
 
-The workflow produces output containing the agent's response, accessible via `$state.answer` in subsequent steps or returned as the final result.
+The workflow produces output containing the agent's response, stored in `state.answer`.

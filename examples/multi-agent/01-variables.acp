@@ -1,0 +1,13 @@
+// Variable definitions
+
+variable "openai_api_key" {
+  type        = string
+  description = "OpenAI API key"
+  sensitive   = true
+}
+
+variable "anthropic_api_key" {
+  type        = string
+  description = "Anthropic API key"
+  sensitive   = true
+}
