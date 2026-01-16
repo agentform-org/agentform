@@ -1,6 +1,6 @@
-# Agentform Compiler
+# Agentform™ Compiler
 
-YAML compilation and validation for Agentform.
+YAML compilation and validation for Agentform™.
 
 ## Installation
 

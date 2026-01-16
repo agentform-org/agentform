@@ -1,6 +1,6 @@
-# Agentform Schema
+# Agentform™ Schema
 
-Core data models and YAML schemas for Agentform (Agent as code protocol).
+Core data models and YAML schemas for Agentform™ (Declarative AI agent framework).
 
 ## Installation
 

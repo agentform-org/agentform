@@ -12,7 +12,7 @@ console = Console()
 
 app = typer.Typer(
     name="agentform",
-    help="Agentform - Agent as code protocol",
+    help="Agentform™ - Declarative AI agent framework",
     add_completion=False,
     no_args_is_help=True,
 )
@@ -26,7 +26,7 @@ app.command(name="run", help="Run an Agentform workflow")(run)
 
 @app.callback()
 def callback() -> None:
-    """Agentform - Agent as code protocol.
+    """Agentform™ - Declarative AI agent framework.
 
     A declarative framework for defining AI agent systems using YAML.
     """

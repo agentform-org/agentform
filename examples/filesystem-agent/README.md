@@ -1,6 +1,6 @@
 # Filesystem Agent Example
 
-An Agentform example demonstrating an agent that can read, write, and analyze files using the filesystem MCP server.
+An Agentform™ example demonstrating an agent that can read, write, and analyze files using the filesystem MCP server.
 
 ## Overview
 

@@ -1,10 +1,10 @@
 # PR Reviewer Example
 
-An Agentform example demonstrating an automated pull request reviewer using the GitHub MCP server with human approval gates.
+An Agentform™ example demonstrating an automated pull request reviewer using the GitHub MCP server with human approval gates.
 
 ## Overview
 
-This example showcases advanced Agentform features including:
+This example showcases advanced Agentform™ features including:
 - **GitHub integration**: Fetch PR data and submit reviews via MCP
 - **Human-in-the-loop**: Approval gates before submitting reviews
 - **Write operations with approval**: Capabilities that require explicit approval

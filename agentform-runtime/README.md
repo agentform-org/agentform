@@ -1,6 +1,6 @@
-# Agentform Runtime
+# Agentform™ Runtime
 
-Workflow execution engine for Agentform.
+Workflow execution engine for Agentform™.
 
 ## Installation
 
