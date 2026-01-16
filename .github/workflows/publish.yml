@@ -1,11 +1,18 @@
 name: Publish to PyPI
 
 on:
+  push:
+    tags:
+      - "v*"
   release:
     types: [published]
 
 env:
   PYTHON_VERSION: "3.12"
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   publish:
@@ -34,10 +41,17 @@ jobs:
       - name: Extract version from tag
         id: version
         run: |
+          # Get version from tag - handle both push (tag) and release events
+          if [ "${{ github.event_name }}" == "release" ]; then
+            TAG="${{ github.event.release.tag_name }}"
+          else
+            TAG="${{ github.ref_name }}"
+          fi
           # Remove 'v' prefix from tag if present (e.g., v0.1.0 -> 0.1.0)
-          VERSION=${GITHUB_REF_NAME#v}
+          VERSION=${TAG#v}
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Publishing version: $VERSION"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Publishing version: $VERSION from tag: $TAG"
 
       - name: Update package version
         run: |

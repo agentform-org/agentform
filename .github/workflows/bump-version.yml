@@ -4,8 +4,6 @@ on:
   pull_request:
     types: [closed]
     branches: [main]
-  push:
-    branches: [main]
 
 permissions:
   contents: write
@@ -13,16 +11,11 @@ permissions:
 
 jobs:
   bump-version:
-    # Run on PR merge OR direct push to main (but not both)
-    # - PR merge: use pull_request event (has direct label access)
-    # - Direct push: use push event, but skip merge commits (they trigger pull_request event)
-    # - Skip version bump commits to prevent loops
+    # Run on PR merge to main
+    # Skip version bump commits to prevent loops
     if: |
-      (github.event_name == 'pull_request' && github.event.pull_request.merged == true) ||
-      (github.event_name == 'push' && 
-       !startsWith(github.event.head_commit.message, 'Merge pull request') &&
-       !contains(github.event.head_commit.message, '[version bump]') && 
-       !contains(github.event.head_commit.message, '[skip version]'))
+      github.event_name == 'pull_request' && 
+      github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
@@ -64,42 +57,17 @@ jobs:
         run: |
           BUMP_TYPE="patch"  # Default to patch
           
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            # Direct access to PR labels
-            LABELS='${{ toJson(github.event.pull_request.labels.*.name) }}'
-            echo "PR Labels: $LABELS"
-            
-            # Check labels with priority: major > minor > patch
-            if echo "$LABELS" | grep -q '"major"'; then
-              BUMP_TYPE="major"
-            elif echo "$LABELS" | grep -q '"minor"'; then
-              BUMP_TYPE="minor"
-            elif echo "$LABELS" | grep -q '"patch"'; then
-              BUMP_TYPE="patch"
-            fi
-          else
-            # Push event - try to find associated PR via API
-            echo "Push event - querying for associated PR..."
-            COMMIT_SHA="${{ github.sha }}"
-            
-            # Query GitHub API for PRs associated with this commit
-            PR_DATA=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/${{ github.repository }}/commits/${COMMIT_SHA}/pulls")
-            
-            if [ "$(echo "$PR_DATA" | jq 'length')" -gt 0 ]; then
-              LABELS=$(echo "$PR_DATA" | jq -r '.[0].labels[].name' 2>/dev/null || echo "")
-              echo "Found PR labels: $LABELS"
-              
-              if echo "$LABELS" | grep -q "^major$"; then
-                BUMP_TYPE="major"
-              elif echo "$LABELS" | grep -q "^minor$"; then
-                BUMP_TYPE="minor"
-              elif echo "$LABELS" | grep -q "^patch$"; then
-                BUMP_TYPE="patch"
-              fi
-            else
-              echo "No associated PR found, defaulting to patch"
-            fi
+          # Direct access to PR labels
+          LABELS='${{ toJson(github.event.pull_request.labels.*.name) }}'
+          echo "PR Labels: $LABELS"
+          
+          # Check labels with priority: major > minor > patch
+          if echo "$LABELS" | grep -q '"major"'; then
+            BUMP_TYPE="major"
+          elif echo "$LABELS" | grep -q '"minor"'; then
+            BUMP_TYPE="minor"
+          elif echo "$LABELS" | grep -q '"patch"'; then
+            BUMP_TYPE="patch"
           fi
           
           echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
