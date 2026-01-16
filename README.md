@@ -15,7 +15,7 @@
 <p align="center">
   <a href="https://pypi.org/project/acp-cli/"><img src="https://img.shields.io/pypi/v/acp-cli?style=flat-square&color=6366f1" alt="PyPI version"></a>
   <a href="https://pypi.org/project/acp-cli/"><img src="https://img.shields.io/pypi/pyversions/acp-cli?style=flat-square" alt="Python 3.12+"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-22c55e?style=flat-square" alt="MIT License"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-22c55e?style=flat-square" alt="Apache-2.0 License"></a>
   <a href="#"><img src="https://img.shields.io/badge/status-alpha-f97316?style=flat-square" alt="Alpha"></a>
 </p>
 
@@ -312,7 +312,7 @@ acp-vscode/          # VS Code extension (separate repo)
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache-2.0 License - see the [LICENSE](LICENSE) file for details.
 
 <br />
 

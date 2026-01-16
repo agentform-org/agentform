@@ -4,12 +4,12 @@ version = "0.0.2"
 description = "MCP server integration for ACP"
 authors = ["ACP Team"]
 readme = "README.md"
-license = "MIT"
+license = "Apache-2.0"
 packages = [{include = "acp_mcp"}]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
