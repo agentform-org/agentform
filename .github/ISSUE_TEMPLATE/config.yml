@@ -1,8 +1,0 @@
-blank_issues_enabled: false
-contact_links:
-  - name: Ask a Question
-    url: https://github.com/acp-team/acp/discussions
-    about: Ask questions and discuss ideas with the community
-  - name: Documentation Issue
-    url: https://github.com/acp-team/acp/issues/new
-    about: Report issues with documentation
