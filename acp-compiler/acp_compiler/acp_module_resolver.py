@@ -2,11 +2,19 @@
 
 Handles resolving module sources from Git URLs or local paths,
 with caching support for Git-based modules.
+
+Supports Terraform-style source syntax:
+- Local paths: "./modules/my-module"
+- Git URLs: "github.com/org/repo"
+- Git URLs with subdirectory: "github.com/org/repo//path/to/module"
+
+Modules are cached locally in .acp/modules/ within the project directory.
 """
 
 import hashlib
 import os
 import re
+import shutil
 import subprocess
 from pathlib import Path
 from typing import NamedTuple
@@ -25,6 +33,13 @@ class ResolvedModule(NamedTuple):
     source: str  # Original source string
     version: str | None  # Version/ref if specified
     is_local: bool  # Whether this is a local path or Git module
+
+
+class ParsedGitSource(NamedTuple):
+    """Parsed Git source URL."""
+
+    repo_url: str  # Git repository URL (for cloning)
+    subdir: str | None  # Subdirectory within the repo (after //)
 
 
 # Git URL patterns
@@ -59,6 +74,30 @@ def is_git_url(source: str) -> bool:
         if re.match(pattern, source):
             return True
     return False
+
+
+def _parse_git_source(source: str) -> ParsedGitSource:
+    """Parse a Git source URL, extracting repo URL and optional subdirectory.
+
+    Supports Terraform-style syntax with // for subdirectories:
+    - "github.com/org/repo" -> repo only
+    - "github.com/org/repo//subdir" -> repo with subdirectory
+    - "github.com/org/repo//path/to/module" -> repo with nested subdirectory
+
+    Args:
+        source: Module source string
+
+    Returns:
+        ParsedGitSource with repo_url and optional subdir
+    """
+    # Check for // subdirectory separator
+    if "//" in source:
+        parts = source.split("//", 1)
+        repo_url = parts[0].rstrip("/")
+        subdir = parts[1].lstrip("/") if len(parts) > 1 else None
+        return ParsedGitSource(repo_url=repo_url, subdir=subdir)
+
+    return ParsedGitSource(repo_url=source, subdir=None)
 
 
 def _normalize_git_url(source: str) -> str:
@@ -120,10 +159,14 @@ def _get_cache_key(source: str, version: str | None) -> str:
     return f"{name_part}_{hash_suffix}"
 
 
-def get_cache_dir() -> Path:
-    """Get the default module cache directory.
+def get_cache_dir(base_path: Path | None = None) -> Path:
+    """Get the module cache directory.
 
-    Uses ~/.acp/modules/ by default, or ACP_MODULE_CACHE_DIR env var if set.
+    Uses .acp/modules/ within the project directory (like Terraform).
+    Falls back to ACP_MODULE_CACHE_DIR env var if set.
+
+    Args:
+        base_path: Project base path. If None, uses current directory.
 
     Returns:
         Path to cache directory
@@ -131,13 +174,16 @@ def get_cache_dir() -> Path:
     if cache_dir := os.environ.get("ACP_MODULE_CACHE_DIR"):
         return Path(cache_dir)
 
-    return Path.home() / ".acp" / "modules"
+    # Use local .acp/modules/ directory within the project
+    project_path = base_path or Path.cwd()
+    return project_path / ".acp" / "modules"
 
 
 class ModuleResolver:
     """Resolves module sources to local paths.
 
     Handles both local paths and Git URLs, with caching for Git modules.
+    Modules are cached in .acp/modules/ within the project directory.
     """
 
     def __init__(
@@ -151,10 +197,10 @@ class ModuleResolver:
             base_path: Base path for resolving relative local paths.
                       Defaults to current working directory.
             cache_dir: Directory to cache Git modules.
-                      Defaults to ~/.acp/modules/
+                      Defaults to .acp/modules/ in the project directory
         """
         self.base_path = base_path or Path.cwd()
-        self.cache_dir = cache_dir or get_cache_dir()
+        self.cache_dir = cache_dir or get_cache_dir(self.base_path)
         self._resolved_cache: dict[tuple[str, str | None], ResolvedModule] = {}
 
     def resolve(self, source: str, version: str | None = None) -> ResolvedModule:
@@ -229,8 +275,12 @@ class ModuleResolver:
     ) -> ResolvedModule:
         """Resolve a Git module by cloning/updating it.
 
+        Supports Terraform-style // syntax for subdirectories:
+        - "github.com/org/repo" -> clones repo, uses root
+        - "github.com/org/repo//subdir" -> clones repo, uses subdir
+
         Args:
-            source: Git URL
+            source: Git URL (optionally with //subdir)
             version: Git ref (tag, branch, commit)
 
         Returns:
@@ -239,40 +289,57 @@ class ModuleResolver:
         Raises:
             ModuleResolutionError: If cloning fails
         """
+        # Parse source to extract repo URL and subdirectory
+        parsed = _parse_git_source(source)
+        repo_url = parsed.repo_url
+        subdir = parsed.subdir
+
         # Ensure cache directory exists
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
-        # Get cache key and target path
-        cache_key = _get_cache_key(source, version)
-        target_path = self.cache_dir / cache_key
+        # Get cache key and target path (based on repo URL only)
+        cache_key = _get_cache_key(repo_url, version)
+        repo_path = self.cache_dir / cache_key
 
         # Normalize URL for cloning
-        git_url = _normalize_git_url(source)
+        git_url = _normalize_git_url(repo_url)
 
         # Clone or update
-        if target_path.exists():
+        if repo_path.exists():
             # Already cloned, verify it's valid
-            if not (target_path / ".git").exists():
+            if not (repo_path / ".git").exists():
                 # Not a git repo, remove and re-clone
-                import shutil
-
-                shutil.rmtree(target_path)
-                self._clone_module(git_url, target_path, version)
+                shutil.rmtree(repo_path)
+                self._clone_module(git_url, repo_path, version)
             elif version:
                 # Checkout specific version
-                self._checkout_version(target_path, version)
+                self._checkout_version(repo_path, version)
         else:
-            self._clone_module(git_url, target_path, version)
+            self._clone_module(git_url, repo_path, version)
+
+        # Determine the module path (repo root or subdirectory)
+        if subdir:
+            module_path = repo_path / subdir
+            if not module_path.exists():
+                raise ModuleResolutionError(
+                    f"Subdirectory '{subdir}' not found in repository: {repo_url}"
+                )
+            if not module_path.is_dir():
+                raise ModuleResolutionError(
+                    f"Subdirectory path is not a directory: {subdir}"
+                )
+        else:
+            module_path = repo_path
 
         # Verify module has .acp files
-        acp_files = list(target_path.glob("*.acp"))
+        acp_files = list(module_path.glob("*.acp"))
         if not acp_files:
             raise ModuleResolutionError(
-                f"No .acp files found in cloned module: {source}"
+                f"No .acp files found in module: {source}"
             )
 
         return ResolvedModule(
-            path=target_path,
+            path=module_path,
             source=source,
             version=version,
             is_local=False,

@@ -5,3 +5,24 @@ variable "openai_api_key" {
   description = "OpenAI API key for the LLM provider"
   sensitive   = true
 }
+
+variable "github_token" {
+  type        = string
+  description = "GitHub Personal Access Token for PR access"
+  sensitive   = true
+}
+
+variable "owner" {
+  type        = string
+  description = "GitHub repository owner"
+}
+
+variable "repo" {
+  type        = string
+  description = "GitHub repository name"
+}
+
+variable "pr_number" {
+  type        = string
+  description = "Pull request number to review"
+}

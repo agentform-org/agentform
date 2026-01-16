@@ -1,14 +1,14 @@
 // Module Imports
-// Import the local simple-acp-module with custom parameters
+// Import the simple-acp-module from GitHub
 
 module "simple-acp-module" {
-  source = "./modules/simple-acp-module"
+  source  = "github.com/nirberko/acp-pr-reviewer-example//.acp"
+  version = "main"  // Git branch name
   
-  // Required parameter - pass through our project variable
-  api_key = var.openai_api_key
-
-  // Optional parameters - override defaults
-  default_model    = "gpt-4o-mini"
-  max_cost_per_run = 2.00
-  timeout_seconds  = 180
+  // Required parameters - pass through our project variables
+  openai_api_key               = var.openai_api_key
+  github_personal_access_token = var.github_token
+  owner                        = var.owner
+  repo                         = var.repo
+  pr_number                    = var.pr_number
 }

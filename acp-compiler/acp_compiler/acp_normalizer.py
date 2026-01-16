@@ -239,7 +239,7 @@ class ACPNormalizer:
                 policy_config.name = f"module.{module_name}.{policy_config.name}"
                 policies.append(policy_config)
 
-            # Merge agents (but update their model/policy references)
+            # Merge agents (but update their model/policy/capability references)
             module_agents = module_normalizer._normalize_agents()
             for agent_config in module_agents:
                 # Namespace the agent name
@@ -250,6 +250,12 @@ class ACPNormalizer:
                 # Update policy reference if it's from the module
                 if agent_config.policy and not agent_config.policy.startswith("module."):
                     agent_config.policy = f"module.{module_name}.{agent_config.policy}"
+                # Update capability references in allow list
+                if agent_config.allow:
+                    agent_config.allow = [
+                        f"module.{module_name}.{cap}" if not cap.startswith("module.") else cap
+                        for cap in agent_config.allow
+                    ]
                 agents.append(agent_config)
 
             # Merge workflows (namespaced)
@@ -257,10 +263,12 @@ class ACPNormalizer:
             for workflow_config in module_workflows:
                 # Namespace the workflow name
                 workflow_config.name = f"module.{module_name}.{workflow_config.name}"
-                # Update agent references in workflow steps
+                # Update agent and capability references in workflow steps
                 for step in workflow_config.steps:
                     if step.agent and not step.agent.startswith("module."):
                         step.agent = f"module.{module_name}.{step.agent}"
+                    if step.capability and not step.capability.startswith("module."):
+                        step.capability = f"module.{module_name}.{step.capability}"
                 workflows.append(workflow_config)
 
     def _get_version(self) -> str:
