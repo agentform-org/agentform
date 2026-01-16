@@ -1,10 +1,10 @@
 # Multi-Agent Example
 
-An Agentform example demonstrating multiple agents working together with conditional logic to route tasks appropriately.
+An Agentform™ example demonstrating multiple agents working together with conditional logic to route tasks appropriately.
 
 ## Overview
 
-This example showcases advanced Agentform features including:
+This example showcases advanced Agentform™ features including:
 - **Multiple LLM providers**: OpenAI and Anthropic working together
 - **Agent specialization**: Different agents for different task complexities
 - **Conditional routing**: Dynamic workflow paths based on classification results

@@ -15,7 +15,7 @@ class TestMainCLI:
         result = runner.invoke(app, [])
         # Typer exits with code 2 when showing help for no args (no_args_is_help=True)
         assert result.exit_code == 2
-        assert "Agentform - Agent as code protocol" in result.stdout
+        assert "Agentform™ - Declarative AI agent framework" in result.stdout
 
     def test_cli_version_flag_not_supported(self):
         """Test that --version is not supported (typer default)."""

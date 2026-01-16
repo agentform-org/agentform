@@ -1,6 +1,6 @@
-# Agentform CLI
+# Agentform™ CLI
 
-Command line interface for Agentform.
+Command line interface for Agentform™.
 
 ## Installation
 

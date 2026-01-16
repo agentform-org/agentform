@@ -1,6 +1,6 @@
-# Agentform Examples
+# Agentform™ Examples
 
-This directory contains example Agentform configurations demonstrating various features and use cases. Each example is a complete, runnable project with its own documentation.
+This directory contains example Agentform™ configurations demonstrating various features and use cases. Each example is a complete, runnable project with its own documentation.
 
 ## Quick Start
 
@@ -30,11 +30,11 @@ agentform run <workflow> --var openai_api_key=$OPENAI_API_KEY --input-file input
 
 **Directory:** [`simple-agent/`](simple-agent/)
 
-The simplest possible Agentform configuration. A single agent that answers questions using OpenAI.
+The simplest possible Agentform™ configuration. A single agent that answers questions using OpenAI.
 
 ### What You'll Learn
 
-- Basic Agentform file structure with numbered prefixes
+- Basic Agentform™ file structure with numbered prefixes
 - Defining variables, providers, and models
 - Creating an agent with instructions
 - Building a simple workflow
@@ -55,7 +55,7 @@ The simplest possible Agentform configuration. A single agent that answers quest
 
 ```bash
 cd examples/simple-agent
-agentform run ask --var openai_api_key=$OPENAI_API_KEY --input '{"question": "What is Agentform?"}'
+agentform run ask --var openai_api_key=$OPENAI_API_KEY --input '{"question": "What is Agentform™?"}'
 ```
 
 ---
@@ -64,11 +64,11 @@ agentform run ask --var openai_api_key=$OPENAI_API_KEY --input '{"question": "Wh
 
 **Directory:** [`python-api/`](python-api/)
 
-Use Agentform workflows programmatically from Python applications using the `agentform-api` package.
+Use Agentform™ workflows programmatically from Python applications using the `agentform-api` package.
 
 ### What You'll Learn
 
-- Loading Agentform specs from Python code
+- Loading Agentform™ specs from Python code
 - Running workflows programmatically
 - Using async context managers for resource cleanup
 - Error handling patterns

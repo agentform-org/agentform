@@ -1,6 +1,6 @@
-# Agentform API
+# Agentform™ API
 
-Python SDK for programmatic Agentform usage. Use Agentform workflows directly from your Python applications.
+Python SDK for programmatic Agentform™ usage. Use Agentform™ workflows directly from your Python applications.
 
 ## Installation
 

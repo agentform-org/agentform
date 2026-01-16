@@ -1,10 +1,10 @@
 # Simple Agent Example
 
-A minimal Agentform example demonstrating a basic LLM-powered agent that answers questions.
+A minimal Agentform™ example demonstrating a basic LLM-powered agent that answers questions.
 
 ## Overview
 
-This is the simplest possible Agentform configuration—a single agent with no external capabilities. It showcases the core concepts of Agentform specification without the complexity of MCP servers or multi-agent workflows.
+This is the simplest possible Agentform™ configuration—a single agent with no external capabilities. It showcases the core concepts of Agentform™ specification without the complexity of MCP servers or multi-agent workflows.
 
 ## File Structure
 

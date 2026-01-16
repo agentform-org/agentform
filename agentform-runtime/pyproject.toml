@@ -29,7 +29,7 @@ langchain = "^0.3"
 langchain-openai = "^0.3"
 langchain-anthropic = "^0.3"
 anyio = "^4.2"
-structlog = "^24.1.0"
+structlog = "^25.5.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0"

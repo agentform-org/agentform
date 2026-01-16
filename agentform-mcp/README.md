@@ -1,6 +1,6 @@
-# Agentform MCP
+# Agentform™ MCP
 
-MCP (Model Context Protocol) server integration for Agentform.
+MCP (Model Context Protocol) server integration for Agentform™.
 
 ## Installation
 
