@@ -1,9 +1,9 @@
 [tool.pytest.ini_options]
 testpaths = [
-    "acp-schema/tests",
-    "acp-compiler/tests",
-    "acp-mcp/tests",
-    "acp-runtime/tests",
+    "agentform-schema/tests",
+    "agentform-compiler/tests",
+    "agentform-mcp/tests",
+    "agentform-runtime/tests",
 ]
 asyncio_mode = "auto"
 addopts = "-v"

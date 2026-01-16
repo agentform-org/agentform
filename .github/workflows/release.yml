@@ -23,7 +23,7 @@ jobs:
           VERSION="${TAG#v}"
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Creating release for acp-cli version: $VERSION"
+          echo "Creating release for agentform-cli version: $VERSION"
 
       - name: Verify version in all pyproject.toml files
         run: |
@@ -32,11 +32,11 @@ jobs:
           
           # List of all packages to verify
           PACKAGES=(
-            "acp-cli"
-            "acp-compiler"
-            "acp-mcp"
-            "acp-runtime"
-            "acp-schema"
+            "agentform-cli"
+            "agentform-compiler"
+            "agentform-mcp"
+            "agentform-runtime"
+            "agentform-schema"
           )
           
           echo "Verifying all packages have version: $VERSION"
@@ -52,12 +52,12 @@ jobs:
           done
           
           # Also verify version.py
-          VERSION_PY=$(grep -Po '(?<=^VERSION = ")[^"]*' "acp-schema/acp_schema/version.py")
+          VERSION_PY=$(grep -Po '(?<=^VERSION = ")[^"]*' "agentform-schema/agentform_schema/version.py")
           if [ "$VERSION_PY" != "$VERSION" ]; then
-            echo "❌ acp-schema/acp_schema/version.py: version mismatch (found $VERSION_PY, expected $VERSION)"
+            echo "❌ agentform-schema/agentform_schema/version.py: version mismatch (found $VERSION_PY, expected $VERSION)"
             FAILED=true
           else
-            echo "✓ acp-schema/acp_schema/version.py: version $VERSION"
+            echo "✓ agentform-schema/agentform_schema/version.py: version $VERSION"
           fi
           
           if [ "$FAILED" = true ]; then

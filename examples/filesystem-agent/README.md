@@ -1,6 +1,6 @@
 # Filesystem Agent Example
 
-An ACP example demonstrating an agent that can read, write, and analyze files using the filesystem MCP server.
+An Agentform example demonstrating an agent that can read, write, and analyze files using the filesystem MCP server.
 
 ## Overview
 
@@ -10,14 +10,14 @@ This example showcases how to integrate external capabilities via MCP (Model Con
 
 ```
 filesystem-agent/
-├── 00-project.acp       # Project metadata (acp block)
-├── 01-variables.acp     # Variable definitions
-├── 02-providers.acp     # Provider and model definitions
-├── 03-servers.acp       # MCP server configuration
-├── 04-capabilities.acp  # Capability definitions
-├── 05-policies.acp      # Policy definitions
-├── 06-agents.acp        # Agent definitions
-├── 07-workflows.acp     # Workflow definitions
+├── 00-project.agentform       # Project metadata (agentform block)
+├── 01-variables.agentform     # Variable definitions
+├── 02-providers.agentform     # Provider and model definitions
+├── 03-servers.agentform       # MCP server configuration
+├── 04-capabilities.agentform  # Capability definitions
+├── 05-policies.agentform      # Policy definitions
+├── 06-agents.agentform        # Agent definitions
+├── 07-workflows.agentform     # Workflow definitions
 ├── input.yaml           # Sample input
 └── README.md
 ```
@@ -35,17 +35,17 @@ Run from the example directory:
 cd examples/filesystem-agent
 
 # Read and summarize a file
-acp run read_and_summarize \
+agentform run read_and_summarize \
   --var openai_api_key=$OPENAI_API_KEY \
   --input-file input.yaml
 
 # List directory contents
-acp run list_and_read \
+agentform run list_and_read \
   --var openai_api_key=$OPENAI_API_KEY \
   --input '{"directory_path": ".", "task": "Describe what files are present"}'
 
 # Write a file
-acp run write_file \
+agentform run write_file \
   --var openai_api_key=$OPENAI_API_KEY \
   --input '{"file_path": "notes.txt", "instructions": "Write a brief note about AI assistants"}'
 ```
@@ -53,12 +53,12 @@ acp run write_file \
 To validate:
 
 ```bash
-acp validate --var openai_api_key=test
+agentform validate --var openai_api_key=test
 ```
 
 ## Key Concepts
 
-### MCP Server (`03-servers.acp`)
+### MCP Server (`03-servers.agentform`)
 
 Define external MCP servers that provide capabilities:
 
@@ -70,7 +70,7 @@ server "filesystem" {
 }
 ```
 
-### Capabilities (`04-capabilities.acp`)
+### Capabilities (`04-capabilities.agentform`)
 
 Map server methods to named capabilities with defined side effects:
 
@@ -89,7 +89,7 @@ capability "write_file" {
 }
 ```
 
-### Policy Budgets (`05-policies.acp`)
+### Policy Budgets (`05-policies.agentform`)
 
 ```hcl
 policy "filesystem_policy" {

@@ -1,0 +1,66 @@
+[tool.poetry]
+name = "agentform-cli"
+version = "0.0.804"
+description = "CLI interface for Agentform"
+authors = ["Agentform Team"]
+readme = "README.md"
+license = "Apache-2.0"
+packages = [{include = "agentform_cli"}]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[tool.poetry.urls]
+"Homepage" = "https://github.com/agentform-team/agentform"
+"Repository" = "https://github.com/agentform-team/agentform"
+
+[tool.poetry.scripts]
+agentform = "agentform_cli.main:app"
+
+# Note: For local development, use path dependencies via poetry install in the root
+# The CI workflow bundles all modules into agentform_cli/ before publishing
+
+[tool.poetry.dependencies]
+python = "^3.11"
+# CLI dependencies
+typer = ">=0.12,<1.0"
+rich = "^13.7"
+structlog = "^24.1.0"
+# From agentform-schema
+pydantic = "^2.5"
+pyyaml = "^6.0"
+# From agentform-compiler
+lark = "^1.1"
+# From agentform-mcp
+anyio = "^4.2"
+# From agentform-runtime
+langchain = "^0.3"
+langchain-openai = "^0.3"
+langchain-anthropic = "^0.3"
+
+[tool.poetry.group.dev.dependencies]
+# Path dependencies for local development
+agentform-schema = {path = "../agentform-schema", develop = true}
+agentform-mcp = {path = "../agentform-mcp", develop = true}
+agentform-compiler = {path = "../agentform-compiler", develop = true}
+agentform-runtime = {path = "../agentform-runtime", develop = true}
+# Test and lint dependencies
+pytest = "^8.0"
+pytest-asyncio = "^0.24"
+pytest-cov = "^4.1"
+ruff = "^0.8"
+mypy = "^1.8"
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::RuntimeWarning",
+]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

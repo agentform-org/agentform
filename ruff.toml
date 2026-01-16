@@ -1,4 +1,4 @@
-# Ruff configuration for ACP monorepo
+# Ruff configuration for Agentform monorepo
 # https://docs.astral.sh/ruff/configuration/
 
 target-version = "py311"
@@ -6,11 +6,11 @@ line-length = 100
 
 # Include all Python source directories
 src = [
-    "acp-schema/acp_schema",
-    "acp-compiler/acp_compiler",
-    "acp-mcp/acp_mcp",
-    "acp-runtime/acp_runtime",
-    "acp-cli/acp_cli",
+    "agentform-schema/agentform_schema",
+    "agentform-compiler/agentform_compiler",
+    "agentform-mcp/agentform_mcp",
+    "agentform-runtime/agentform_runtime",
+    "agentform-cli/agentform_cli",
 ]
 
 [lint]
@@ -47,11 +47,11 @@ ignore = [
 
 [lint.isort]
 known-first-party = [
-    "acp_schema",
-    "acp_compiler",
-    "acp_mcp",
-    "acp_runtime",
-    "acp_cli",
+    "agentform_schema",
+    "agentform_compiler",
+    "agentform_mcp",
+    "agentform_runtime",
+    "agentform_cli",
 ]
 
 [format]

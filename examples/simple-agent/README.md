@@ -1,26 +1,26 @@
 # Simple Agent Example
 
-A minimal ACP example demonstrating a basic LLM-powered agent that answers questions.
+A minimal Agentform example demonstrating a basic LLM-powered agent that answers questions.
 
 ## Overview
 
-This is the simplest possible ACP configuration—a single agent with no external capabilities. It showcases the core concepts of ACP specification without the complexity of MCP servers or multi-agent workflows.
+This is the simplest possible Agentform configuration—a single agent with no external capabilities. It showcases the core concepts of Agentform specification without the complexity of MCP servers or multi-agent workflows.
 
 ## File Structure
 
 ```
 simple-agent/
-├── 00-project.acp      # Project metadata (acp block)
-├── 01-variables.acp    # Variable definitions
-├── 02-providers.acp    # Provider and model definitions
-├── 03-policies.acp     # Policy definitions
-├── 04-agents.acp       # Agent definitions
-├── 05-workflows.acp    # Workflow definitions
+├── 00-project.agentform      # Project metadata (agentform block)
+├── 01-variables.agentform    # Variable definitions
+├── 02-providers.agentform    # Provider and model definitions
+├── 03-policies.agentform     # Policy definitions
+├── 04-agents.agentform       # Agent definitions
+├── 05-workflows.agentform    # Workflow definitions
 ├── input.yaml          # Sample input
 └── README.md
 ```
 
-Files are processed in alphabetical order, so we use numbered prefixes to ensure proper ordering. References work across files—for example, `04-agents.acp` can reference models defined in `02-providers.acp`.
+Files are processed in alphabetical order, so we use numbered prefixes to ensure proper ordering. References work across files—for example, `04-agents.agentform` can reference models defined in `02-providers.agentform`.
 
 ## Prerequisites
 
@@ -34,27 +34,27 @@ Run from the example directory:
 cd examples/simple-agent
 
 # Run with provided input
-acp run ask --var openai_api_key=$OPENAI_API_KEY --input-file input.yaml
+agentform run ask --var openai_api_key=$OPENAI_API_KEY --input-file input.yaml
 
 # Or provide inline input
-acp run ask --var openai_api_key=$OPENAI_API_KEY --input '{"question": "What is the meaning of life?"}'
+agentform run ask --var openai_api_key=$OPENAI_API_KEY --input '{"question": "What is the meaning of life?"}'
 ```
 
 To validate:
 
 ```bash
-acp validate --var openai_api_key=test
+agentform validate --var openai_api_key=test
 ```
 
 To compile and see the IR:
 
 ```bash
-acp compile --var openai_api_key=test
+agentform compile --var openai_api_key=test
 ```
 
 ## Key Concepts
 
-### Variables (`01-variables.acp`)
+### Variables (`01-variables.agentform`)
 
 Define variables that can be provided at runtime:
 
@@ -66,7 +66,7 @@ variable "openai_api_key" {
 }
 ```
 
-### Providers & Models (`02-providers.acp`)
+### Providers & Models (`02-providers.agentform`)
 
 Configure LLM providers and model definitions:
 
@@ -86,7 +86,7 @@ model "gpt4o_mini" {
 }
 ```
 
-### Policies (`03-policies.acp`)
+### Policies (`03-policies.agentform`)
 
 Define resource constraints and budgets:
 
@@ -97,7 +97,7 @@ policy "default" {
 }
 ```
 
-### Agents (`04-agents.acp`)
+### Agents (`04-agents.agentform`)
 
 Configure agents with models, instructions, and policies:
 
@@ -114,7 +114,7 @@ EOF
 }
 ```
 
-### Workflows (`05-workflows.acp`)
+### Workflows (`05-workflows.agentform`)
 
 Define execution flow using steps:
 

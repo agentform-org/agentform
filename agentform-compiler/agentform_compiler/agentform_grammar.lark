@@ -1,0 +1,138 @@
+// Agentform Native Schema Grammar
+// A block-based configuration language for AI agent systems
+
+start: block+
+
+// Top-level blocks
+block: agentform_block
+     | variable_block
+     | provider_block
+     | server_block
+     | capability_block
+     | policy_block
+     | model_block
+     | agent_block
+     | workflow_block
+     | module_block
+
+// Variable block: variable "name" { type = string, default = ..., ... }
+variable_block: "variable" STRING "{" variable_body "}"
+variable_body: attribute*
+
+// Agentform metadata block
+agentform_block: "agentform" "{" agentform_body "}"
+agentform_body: attribute*
+
+// Provider block: provider "type.vendor" "name" { ... }
+provider_block: "provider" STRING STRING "{" provider_body "}"
+provider_body: (attribute | nested_block)*
+
+// Server block: server "name" { ... }
+server_block: "server" STRING "{" server_body "}"
+server_body: (attribute | nested_block)*
+
+// Capability block: capability "name" { ... }
+capability_block: "capability" STRING "{" capability_body "}"
+capability_body: (attribute | nested_block)*
+
+// Policy block: policy "name" { ... }
+policy_block: "policy" STRING "{" policy_body "}"
+policy_body: (attribute | nested_block)*
+
+// Model block: model "name" { ... }
+model_block: "model" STRING "{" model_body "}"
+model_body: (attribute | nested_block)*
+
+// Agent block: agent "name" { ... }
+agent_block: "agent" STRING "{" agent_body "}"
+agent_body: (attribute | nested_block)*
+
+// Workflow block with nested steps
+workflow_block: "workflow" STRING "{" workflow_body "}"
+workflow_body: (attribute | step_block)*
+
+// Module block: module "name" { source = "...", ... }
+module_block: "module" STRING "{" module_body "}"
+module_body: (attribute | nested_block)*
+
+// Step block (inside workflow)
+step_block: "step" STRING "{" step_body "}"
+step_body: (attribute | nested_block)*
+
+// Generic nested block: identifier { ... } or identifier "label" { ... }
+nested_block: IDENTIFIER "{" nested_body "}"           -> unlabeled_nested_block
+            | IDENTIFIER STRING "{" nested_body "}"   -> labeled_nested_block
+nested_body: (attribute | nested_block)*
+
+// Attribute assignment - uses expr to support conditional expressions
+attribute: IDENTIFIER "=" expr
+
+// Expression (top level) - conditional or logical expression
+expr: conditional_expr
+    | or_expr
+
+// Conditional expression: condition ? true_val : false_val
+conditional_expr: or_expr "?" expr ":" expr
+
+// Logical OR
+or_expr: and_expr ("||" and_expr)*
+
+// Logical AND
+and_expr: not_expr ("&&" not_expr)*
+
+// Logical NOT (use alias to pass through to comparison_expr when no NOT)
+not_expr: "!" not_expr              -> logical_not
+        | comparison_expr           -> pass_through
+
+// Comparison expression
+comparison_expr: value (COMP_OP value)?
+
+// Values (atoms)
+value: HEREDOC          -> heredoc_value
+     | STRING           -> string_value
+     | SIGNED_NUMBER    -> number_value
+     | BOOLEAN          -> boolean_value
+     | var_ref          -> var_ref_value
+     | reference        -> reference_value
+     | state_ref        -> state_ref_value
+     | array            -> array_value
+     | "(" expr ")"     -> paren_expr
+     | IDENTIFIER       -> identifier_value
+
+// State reference: $input.field or $state.step.field
+state_ref: STATE_REF
+
+// Reference: dotted identifier path (e.g., provider.llm.openai.default)
+reference: IDENTIFIER ("." IDENTIFIER)+
+
+// Array: [ value, value, ... ]
+array: "[" [expr ("," expr)* ","?] "]"
+
+// Variable reference: var.variable_name
+var_ref: "var" "." IDENTIFIER
+
+// Comparison operators
+COMP_OP: "==" | "!=" | "<=" | ">=" | "<" | ">"
+
+// Terminals
+// BOOLEAN must be defined with higher priority than IDENTIFIER
+BOOLEAN.2: "true" | "false"
+IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
+STRING: ESCAPED_STRING
+SIGNED_NUMBER: NUMBER
+HEREDOC: /<<EOF\n[\s\S]*?\nEOF/
+// State reference: $input.field or $state.step.field (higher priority than IDENTIFIER)
+STATE_REF.3: /\$[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)*/
+
+// Comments and whitespace
+COMMENT: "//" /[^\n]*/
+BLOCK_COMMENT: "/*" /(.|\n)*?/ "*/"
+
+%import common.ESCAPED_STRING
+%import common.NUMBER
+%import common.WS
+
+%ignore WS
+%ignore COMMENT
+%ignore BLOCK_COMMENT
+

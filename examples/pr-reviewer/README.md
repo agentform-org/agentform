@@ -1,10 +1,10 @@
 # PR Reviewer Example
 
-An ACP example demonstrating an automated pull request reviewer using the GitHub MCP server with human approval gates.
+An Agentform example demonstrating an automated pull request reviewer using the GitHub MCP server with human approval gates.
 
 ## Overview
 
-This example showcases advanced ACP features including:
+This example showcases advanced Agentform features including:
 - **GitHub integration**: Fetch PR data and submit reviews via MCP
 - **Human-in-the-loop**: Approval gates before submitting reviews
 - **Write operations with approval**: Capabilities that require explicit approval
@@ -14,14 +14,14 @@ This example showcases advanced ACP features including:
 
 ```
 pr-reviewer/
-├── 00-project.acp       # Project metadata (acp block)
-├── 01-variables.acp     # Variable definitions
-├── 02-providers.acp     # Provider and model definitions
-├── 03-servers.acp       # MCP server configuration
-├── 04-capabilities.acp  # Capability definitions
-├── 05-policies.acp      # Policy definitions
-├── 06-agents.acp        # Agent definitions
-├── 07-workflows.acp     # Workflow definitions
+├── 00-project.agentform       # Project metadata (agentform block)
+├── 01-variables.agentform     # Variable definitions
+├── 02-providers.agentform     # Provider and model definitions
+├── 03-servers.agentform       # MCP server configuration
+├── 04-capabilities.agentform  # Capability definitions
+├── 05-policies.agentform      # Policy definitions
+├── 06-agents.agentform        # Agent definitions
+├── 07-workflows.agentform     # Workflow definitions
 ├── input.yaml           # Sample input
 └── README.md
 ```
@@ -47,13 +47,13 @@ Run from the example directory:
 cd examples/pr-reviewer
 
 # Review a pull request
-acp run review_pr \
+agentform run review_pr \
   --var openai_api_key=$OPENAI_API_KEY \
   --var github_personal_access_token=$GITHUB_TOKEN \
   --input-file input.yaml
 
 # Or specify PR details inline
-acp run review_pr \
+agentform run review_pr \
   --var openai_api_key=$OPENAI_API_KEY \
   --var github_personal_access_token=$GITHUB_TOKEN \
   --input '{"owner": "myorg", "repo": "myrepo", "pr_number": 42}'
@@ -69,12 +69,12 @@ The workflow will:
 To validate:
 
 ```bash
-acp validate --var openai_api_key=test --var github_personal_access_token=test
+agentform validate --var openai_api_key=test --var github_personal_access_token=test
 ```
 
 ## Key Concepts
 
-### Variables (`01-variables.acp`)
+### Variables (`01-variables.agentform`)
 
 Sensitive credentials are defined as variables:
 
@@ -90,7 +90,7 @@ variable "github_personal_access_token" {
 }
 ```
 
-### Authenticated MCP Server (`03-servers.acp`)
+### Authenticated MCP Server (`03-servers.agentform`)
 
 ```hcl
 server "github" {
@@ -103,7 +103,7 @@ server "github" {
 }
 ```
 
-### Capabilities with Approval (`04-capabilities.acp`)
+### Capabilities with Approval (`04-capabilities.agentform`)
 
 ```hcl
 capability "create_review" {
@@ -114,7 +114,7 @@ capability "create_review" {
 }
 ```
 
-### Human Approval Gates (`07-workflows.acp`)
+### Human Approval Gates (`07-workflows.agentform`)
 
 ```hcl
 step "approval" {

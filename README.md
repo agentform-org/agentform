@@ -1,9 +1,9 @@
 <p align="center">
-  <img width="1200" height="300" alt="ACP" src="https://github.com/user-attachments/assets/963d3079-7242-434c-8764-6b7d4d1e37f4" />
+  <img width="1200" height="300" alt="Agentform" src="https://github.com/user-attachments/assets/963d3079-7242-434c-8764-6b7d4d1e37f4" />
 </p>
 
 <p align="center">
-  <strong>Define AI agent systems declaratively using ACP native schema</strong>
+  <strong>Define AI agent systems declaratively using Agentform native schema</strong>
 </p>
 
 <p align="center">
@@ -13,8 +13,8 @@
 <br />
 
 <p align="center">
-  <a href="https://pypi.org/project/acp-cli/"><img src="https://img.shields.io/pypi/v/acp-cli?style=flat-square&color=6366f1" alt="PyPI version"></a>
-  <a href="https://pypi.org/project/acp-cli/"><img src="https://img.shields.io/pypi/pyversions/acp-cli?style=flat-square" alt="Python 3.12+"></a>
+  <a href="https://pypi.org/project/agentform-cli/"><img src="https://img.shields.io/pypi/v/agentform-cli?style=flat-square&color=6366f1" alt="PyPI version"></a>
+  <a href="https://pypi.org/project/agentform-cli/"><img src="https://img.shields.io/pypi/pyversions/agentform-cli?style=flat-square" alt="Python 3.12+"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-22c55e?style=flat-square" alt="Apache License 2.0"></a>
   <a href="#"><img src="https://img.shields.io/badge/status-alpha-f97316?style=flat-square" alt="Alpha"></a>
 </p>
@@ -23,7 +23,7 @@
 
 ## Table of Contents
 
-- [Why ACP?](#why-acp)
+- [Why Agentform?](#why-agentform)
 - [Installation](#installation)
   - [Quick Install (Recommended)](#quick-install-recommended)
   - [Verify Installation](#verify-installation)
@@ -44,9 +44,9 @@
 
 ---
 
-## Why ACP?
+## Why Agentform?
 
-Most AI agent frameworks require you to write imperative code - managing state, handling retries, wiring up tools. ACP takes a different approach: **describe your agents declaratively in ACP native schema, and let the runtime engine handle the rest.**
+Most AI agent frameworks require you to write imperative code - managing state, handling retries, wiring up tools. Agentform takes a different approach: **describe your agents declaratively in Agentform native schema, and let the runtime engine handle the rest.**
 
 ```hcl
 agent "reviewer" {
@@ -57,7 +57,7 @@ agent "reviewer" {
 }
 ```
 
-**The result:** Your agent configurations become version-controlled artifacts that are easy to review, share, and reproduce. The native `.acp` format provides type safety, explicit references, and improved editor support.
+**The result:** Your agent configurations become version-controlled artifacts that are easy to review, share, and reproduce. The native `.agentform` format provides type safety, explicit references, and improved editor support.
 
 <br />
 
@@ -66,7 +66,7 @@ agent "reviewer" {
 ### Quick Install (Recommended)
 
 ```bash
-pip install acp-cli
+pip install agentform-cli
 ```
 
 That's it! You're ready to go.
@@ -75,7 +75,7 @@ That's it! You're ready to go.
 ### Verify Installation
 
 ```bash
-acp --help
+agentform --help
 ```
 
 <br />
@@ -90,10 +90,10 @@ export OPENAI_API_KEY="your-openai-key"
 
 ### 2. Create an agent spec
 
-Create a file called `my-agent.acp`:
+Create a file called `my-agent.agentform`:
 
 ```hcl
-acp {
+agentform {
   version = "0.1"
   project = "my-first-agent"
 }
@@ -158,10 +158,10 @@ workflow "ask" {
 
 ```bash
 # Validate your spec
-acp validate my-agent.acp
+agentform validate my-agent.agentform
 
 # Run with input
-acp run ask --spec my-agent.acp --input '{"question": "What is the capital of France?"}'
+agentform run ask --spec my-agent.agentform --input '{"question": "What is the capital of France?"}'
 ```
 
 <br />
@@ -170,7 +170,7 @@ acp run ask --spec my-agent.acp --input '{"question": "What is the capital of Fr
 
 | Feature | Description |
 |---------|-------------|
-| **Native Schema** | Define agents, workflows, and policies in type-safe `.acp` format with explicit references |
+| **Native Schema** | Define agents, workflows, and policies in type-safe `.agentform` format with explicit references |
 | **Modules** | Terraform-style reusable modules for sharing agent configurations via Git |
 | **Multi-Provider** | Use OpenAI, Anthropic, or other LLM providers interchangeably |
 | **Multi-Agent** | Coordinate multiple specialized agents with conditional routing |
@@ -183,26 +183,26 @@ acp run ask --spec my-agent.acp --input '{"question": "What is the capital of Fr
 
 ## Architecture
 
-ACP is built as a modular system with five core packages:
+Agentform is built as a modular system with five core packages:
 
 ```mermaid
 flowchart TB
     subgraph User["User Layer"]
-        ACP["📄 .acp Spec"]
-        CLI["⚡ acp-cli"]
-        ACP --> CLI
+        Agentform["📄 .agentform Spec"]
+        CLI["⚡ agentform-cli"]
+        Agentform --> CLI
     end
 
     subgraph Core["Core Layer"]
-        SCHEMA["📦 acp-schema"]
-        COMPILER["🔧 acp-compiler"]
-        RUNTIME["🚀 acp-runtime"]
+        SCHEMA["📦 agentform-schema"]
+        COMPILER["🔧 agentform-compiler"]
+        RUNTIME["🚀 agentform-runtime"]
         COMPILER --> SCHEMA
         COMPILER --> RUNTIME
     end
 
     subgraph Integration["Integration Layer"]
-        MCP["🔌 acp-mcp"]
+        MCP["🔌 agentform-mcp"]
         LLM["🧠 LLM Providers"]
         TOOLS["🛠️ External Tools"]
     end
@@ -215,17 +215,17 @@ flowchart TB
 
 | Package | Description |
 |---------|-------------|
-| **acp-schema** | Core Pydantic models for specs and Intermediate Representation |
-| **acp-compiler** | Parses `.acp` files, validates specs, and generates IR for the runtime |
-| **acp-runtime** | Workflow execution engine with LLM integration and policy enforcement |
-| **acp-mcp** | MCP (Model Context Protocol) client for connecting to external tool servers |
-| **acp-cli** | Command-line interface for validating and running workflows |
+| **agentform-schema** | Core Pydantic models for specs and Intermediate Representation |
+| **agentform-compiler** | Parses `.agentform` files, validates specs, and generates IR for the runtime |
+| **agentform-runtime** | Workflow execution engine with LLM integration and policy enforcement |
+| **agentform-mcp** | MCP (Model Context Protocol) client for connecting to external tool servers |
+| **agentform-cli** | Command-line interface for validating and running workflows |
 
 <br />
 
 ## Examples
 
-The [`examples/`](examples/) directory contains ready-to-use configurations demonstrating various ACP features. Each example includes detailed documentation explaining the concepts it covers.
+The [`examples/`](examples/) directory contains ready-to-use configurations demonstrating various Agentform features. Each example includes detailed documentation explaining the concepts it covers.
 
 **[Browse all examples →](examples/)**
 
@@ -233,14 +233,14 @@ Quick start with the simplest example:
 
 ```bash
 cd examples/simple-agent
-acp run ask --var openai_api_key=$OPENAI_API_KEY --input '{"question": "Hello!"}'
+agentform run ask --var openai_api_key=$OPENAI_API_KEY --input '{"question": "Hello!"}'
 ```
 
 <br />
 
 ## Modules
 
-ACP supports a **Terraform-style module system** for creating reusable, shareable agent configurations. Modules let you package providers, policies, agents, and workflows together, making it easy for others to use without extensive configuration.
+Agentform supports a **Terraform-style module system** for creating reusable, shareable agent configurations. Modules let you package providers, policies, agents, and workflows together, making it easy for others to use without extensive configuration.
 
 ### Using Modules
 
@@ -250,7 +250,7 @@ Create a module block referencing a Git repository:
 
 ```hcl
 module "pr-reviewer" {
-  source  = "github.com/org/acp-modules//pr-reviewer"
+  source  = "github.com/org/agentform-modules//pr-reviewer"
   version = "v1.0.0"  // Git branch, tag, or commit
   
   // Pass required parameters
@@ -263,13 +263,13 @@ The `//` syntax separates the repository URL from the subdirectory path (like Te
 
 #### 2. Initialize your project
 
-Download all external modules to your local `.acp/modules/` directory:
+Download all external modules to your local `.agentform/modules/` directory:
 
 ```bash
-acp init
+agentform init
 ```
 
-This clones the module repositories locally. You must run `acp init` before compiling or running workflows that use external modules.
+This clones the module repositories locally. You must run `agentform init` before compiling or running workflows that use external modules.
 
 #### 3. Use module resources
 
@@ -292,24 +292,24 @@ workflow "review" {
 Or run a module's workflow directly:
 
 ```bash
-acp run module.pr-reviewer.review_workflow .
+agentform run module.pr-reviewer.review_workflow .
 ```
 
 ### Creating Modules
 
-A module is simply a directory containing `.acp` files. To create a shareable module:
+A module is simply a directory containing `.agentform` files. To create a shareable module:
 
 #### 1. Create the module structure
 
 ```
 my-module/
-├── 00-project.acp      # Module metadata
-├── 01-variables.acp    # Input parameters (variables)
-├── 02-providers.acp    # LLM providers
-├── 03-policies.acp     # Policies
-├── 04-models.acp       # Model configurations
-├── 05-agents.acp       # Agent definitions
-└── 06-workflows.acp    # Workflows (optional)
+├── 00-project.agentform      # Module metadata
+├── 01-variables.agentform    # Input parameters (variables)
+├── 02-providers.agentform    # LLM providers
+├── 03-policies.agentform     # Policies
+├── 04-models.agentform       # Model configurations
+├── 05-agents.agentform       # Agent definitions
+└── 06-workflows.agentform    # Workflows (optional)
 ```
 
 #### 2. Define input variables
@@ -317,7 +317,7 @@ my-module/
 Variables without defaults become required parameters:
 
 ```hcl
-// 01-variables.acp
+// 01-variables.agentform
 variable "api_key" {
   type        = string
   description = "API key for the LLM provider"
@@ -356,18 +356,18 @@ module "my-module" {
 
 ### Module Caching
 
-Modules are cached in `.acp/modules/` within your project directory:
+Modules are cached in `.agentform/modules/` within your project directory:
 
 ```
 my-project/
-├── .acp/
+├── .agentform/
 │   └── modules/
 │       └── github_com_org_repo_abc123/  # Cached module
-├── 00-project.acp
-└── 01-modules.acp
+├── 00-project.agentform
+└── 01-modules.agentform
 ```
 
-Add `.acp/` to your `.gitignore` - these are downloaded dependencies.
+Add `.agentform/` to your `.gitignore` - these are downloaded dependencies.
 
 <br />
 
@@ -375,19 +375,19 @@ Add `.acp/` to your `.gitignore` - these are downloaded dependencies.
 
 ```bash
 # Initialize project - download external modules
-acp init [directory]
+agentform init [directory]
 
 # Validate a specification
-acp validate <spec-file>
+agentform validate <spec-file>
 
 # Compile to IR (Intermediate Representation) - useful for debugging
-acp compile <spec-file> [--output output.json]
+agentform compile <spec-file> [--output output.json]
 
 # Run a workflow
-acp run <workflow-name> [options]
+agentform run <workflow-name> [options]
 
 Options:
-  -s, --spec PATH        Path to .acp spec file (default: acp.acp)
+  -s, --spec PATH        Path to .agentform spec file (default: agentform.agentform)
   -i, --input JSON       Input data as JSON string
   -f, --input-file PATH  Input data from JSON file
   -o, --output PATH      Write output to file
@@ -416,38 +416,38 @@ We welcome contributions! Whether it's bug fixes, new features, or documentation
 
 ```bash
 # Clone the repository
-git clone https://github.com/acp-team/acp.git
-cd acp
+git clone https://github.com/agentform-team/agentform.git
+cd agentform
 
 # Install all packages in development mode
-cd acp-schema && poetry install && cd ..
-cd acp-mcp && poetry install && cd ..
-cd acp-compiler && poetry install && cd ..
-cd acp-runtime && poetry install && cd ..
-cd acp-cli && poetry install && cd ..
+cd agentform-schema && poetry install && cd ..
+cd agentform-mcp && poetry install && cd ..
+cd agentform-compiler && poetry install && cd ..
+cd agentform-runtime && poetry install && cd ..
+cd agentform-cli && poetry install && cd ..
 ```
 
 #### Running Tests
 
 ```bash
 # Run tests for a specific package
-cd acp-runtime
+cd agentform-runtime
 poetry run pytest
 
 # Run with coverage
-poetry run pytest --cov=acp_runtime
+poetry run pytest --cov=agentform_runtime
 ```
 
 ### Project Structure
 
 ```
-acp/
-├── acp-schema/      # Core data models
-├── acp-compiler/    # ACP parser and validator
-├── acp-runtime/     # Workflow execution engine
-├── acp-mcp/         # MCP client integration
-├── acp-cli/         # Command-line interface
-└── examples/        # Example configurations (.acp format)
+agentform/
+├── agentform-schema/      # Core data models
+├── agentform-compiler/    # Agentform parser and validator
+├── agentform-runtime/     # Workflow execution engine
+├── agentform-mcp/         # MCP client integration
+├── agentform-cli/         # Command-line interface
+└── examples/        # Example configurations (.agentform format)
 ```
 
 ## License

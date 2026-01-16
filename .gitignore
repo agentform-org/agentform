@@ -69,7 +69,7 @@ venv.bak/
 # Poetry
 poetry.lock
 
-# ACP specific
-.acp/
+# Agentform specific
+.agentform/
 *.trace.json
 

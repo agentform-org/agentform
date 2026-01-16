@@ -10,9 +10,9 @@ updates:
         patterns:
           - "*"
 
-  # acp-schema
+  # agentform-schema
   - package-ecosystem: "pip"
-    directory: "/acp-schema"
+    directory: "/agentform-schema"
     schedule:
       interval: "weekly"
     groups:
@@ -20,9 +20,9 @@ updates:
         patterns:
           - "*"
 
-  # acp-compiler
+  # agentform-compiler
   - package-ecosystem: "pip"
-    directory: "/acp-compiler"
+    directory: "/agentform-compiler"
     schedule:
       interval: "weekly"
     groups:
@@ -30,9 +30,9 @@ updates:
         patterns:
           - "*"
 
-  # acp-mcp
+  # agentform-mcp
   - package-ecosystem: "pip"
-    directory: "/acp-mcp"
+    directory: "/agentform-mcp"
     schedule:
       interval: "weekly"
     groups:
@@ -40,9 +40,9 @@ updates:
         patterns:
           - "*"
 
-  # acp-runtime
+  # agentform-runtime
   - package-ecosystem: "pip"
-    directory: "/acp-runtime"
+    directory: "/agentform-runtime"
     schedule:
       interval: "weekly"
     groups:
@@ -50,9 +50,9 @@ updates:
         patterns:
           - "*"
 
-  # acp-cli
+  # agentform-cli
   - package-ecosystem: "pip"
-    directory: "/acp-cli"
+    directory: "/agentform-cli"
     schedule:
       interval: "weekly"
     groups:

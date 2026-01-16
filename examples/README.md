@@ -1,6 +1,6 @@
-# ACP Examples
+# Agentform Examples
 
-This directory contains example ACP configurations demonstrating various features and use cases. Each example is a complete, runnable project with its own documentation.
+This directory contains example Agentform configurations demonstrating various features and use cases. Each example is a complete, runnable project with its own documentation.
 
 ## Quick Start
 
@@ -8,8 +8,8 @@ All examples follow the same pattern:
 
 ```bash
 cd examples/<example-name>
-acp validate --var openai_api_key=test  # Validate the configuration
-acp run <workflow> --var openai_api_key=$OPENAI_API_KEY --input-file input.yaml
+agentform validate --var openai_api_key=test  # Validate the configuration
+agentform run <workflow> --var openai_api_key=$OPENAI_API_KEY --input-file input.yaml
 ```
 
 ---
@@ -19,7 +19,7 @@ acp run <workflow> --var openai_api_key=$OPENAI_API_KEY --input-file input.yaml
 | Example | Difficulty | Description |
 |---------|------------|-------------|
 | [simple-agent](#simple-agent) | Beginner | Basic LLM agent answering questions |
-| [python-api](#python-api) | Beginner | Using ACP programmatically from Python |
+| [python-api](#python-api) | Beginner | Using Agentform programmatically from Python |
 | [multi-agent](#multi-agent) | Intermediate | Multiple agents with conditional routing |
 | [filesystem-agent](#filesystem-agent) | Intermediate | File operations via MCP server |
 | [pr-reviewer](#pr-reviewer) | Advanced | GitHub PR reviews with human approval |
@@ -30,11 +30,11 @@ acp run <workflow> --var openai_api_key=$OPENAI_API_KEY --input-file input.yaml
 
 **Directory:** [`simple-agent/`](simple-agent/)
 
-The simplest possible ACP configuration. A single agent that answers questions using OpenAI.
+The simplest possible Agentform configuration. A single agent that answers questions using OpenAI.
 
 ### What You'll Learn
 
-- Basic ACP file structure with numbered prefixes
+- Basic Agentform file structure with numbered prefixes
 - Defining variables, providers, and models
 - Creating an agent with instructions
 - Building a simple workflow
@@ -55,7 +55,7 @@ The simplest possible ACP configuration. A single agent that answers questions u
 
 ```bash
 cd examples/simple-agent
-acp run ask --var openai_api_key=$OPENAI_API_KEY --input '{"question": "What is ACP?"}'
+agentform run ask --var openai_api_key=$OPENAI_API_KEY --input '{"question": "What is Agentform?"}'
 ```
 
 ---
@@ -64,19 +64,19 @@ acp run ask --var openai_api_key=$OPENAI_API_KEY --input '{"question": "What is 
 
 **Directory:** [`python-api/`](python-api/)
 
-Use ACP workflows programmatically from Python applications using the `acp-api` package.
+Use Agentform workflows programmatically from Python applications using the `agentform-api` package.
 
 ### What You'll Learn
 
-- Loading ACP specs from Python code
+- Loading Agentform specs from Python code
 - Running workflows programmatically
 - Using async context managers for resource cleanup
 - Error handling patterns
-- Integrating ACP into web applications (FastAPI example)
+- Integrating Agentform into web applications (FastAPI example)
 
 ### Features Used
 
-- `acp-api` Python SDK
+- `agentform-api` Python SDK
 - Async/await patterns
 - Context managers for resource cleanup
 - Error handling with custom exceptions
@@ -85,7 +85,7 @@ Use ACP workflows programmatically from Python applications using the `acp-api` 
 ### Prerequisites
 
 - Python 3.11+
-- `acp-api` package: `pip install acp-api`
+- `agentform-api` package: `pip install agentform-api`
 - OpenAI API key
 
 ### Run It
@@ -149,13 +149,13 @@ Multiple specialized agents working together with intelligent task routing.
 cd examples/multi-agent
 
 # Simple task → quick_responder (GPT-4o)
-acp run smart_respond \
+agentform run smart_respond \
   --var openai_api_key=$OPENAI_API_KEY \
   --var anthropic_api_key=$ANTHROPIC_API_KEY \
   --input '{"task": "What is 2+2?"}'
 
 # Complex task → deep_analyst (Claude)
-acp run smart_respond \
+agentform run smart_respond \
   --var openai_api_key=$OPENAI_API_KEY \
   --var anthropic_api_key=$ANTHROPIC_API_KEY \
   --input '{"task": "Analyze the impact of AI on employment"}'
@@ -197,12 +197,12 @@ An agent that interacts with the filesystem via MCP (Model Context Protocol) ser
 cd examples/filesystem-agent
 
 # Read and summarize a file
-acp run read_and_summarize \
+agentform run read_and_summarize \
   --var openai_api_key=$OPENAI_API_KEY \
   --input '{"file_path": "article.txt", "task": "Summarize this"}'
 
 # List directory contents
-acp run list_and_read \
+agentform run list_and_read \
   --var openai_api_key=$OPENAI_API_KEY \
   --input '{"directory_path": ".", "task": "What files are here?"}'
 ```
@@ -243,7 +243,7 @@ Automated GitHub pull request reviewer with human-in-the-loop approval.
 ```bash
 cd examples/pr-reviewer
 
-acp run review_pr \
+agentform run review_pr \
   --var openai_api_key=$OPENAI_API_KEY \
   --var github_personal_access_token=$GITHUB_TOKEN \
   --input '{"owner": "your-org", "repo": "your-repo", "pr_number": 123}'
@@ -259,14 +259,14 @@ All examples follow the same file naming convention:
 
 ```
 example/
-├── 00-project.acp      # Project metadata (acp block)
-├── 01-variables.acp    # Variable definitions
-├── 02-providers.acp    # Provider and model definitions
-├── 03-servers.acp      # MCP server configuration (if needed)
-├── 04-capabilities.acp # Capability definitions (if needed)
-├── 05-policies.acp     # Policy definitions
-├── 06-agents.acp       # Agent definitions
-├── 07-workflows.acp    # Workflow definitions
+├── 00-project.agentform      # Project metadata (agentform block)
+├── 01-variables.agentform    # Variable definitions
+├── 02-providers.agentform    # Provider and model definitions
+├── 03-servers.agentform      # MCP server configuration (if needed)
+├── 04-capabilities.agentform # Capability definitions (if needed)
+├── 05-policies.agentform     # Policy definitions
+├── 06-agents.agentform       # Agent definitions
+├── 07-workflows.agentform    # Workflow definitions
 ├── input.yaml          # Sample input
 └── README.md           # Detailed documentation
 ```

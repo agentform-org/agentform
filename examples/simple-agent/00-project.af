@@ -1,0 +1,10 @@
+// Simple Agentform Example
+// An agent that can perform basic tasks using an LLM
+//
+// This example demonstrates multi-file Agentform support.
+// Files are processed in alphabetical order, so we use numbered prefixes.
+
+agentform {
+  version = "0.1"
+  project = "simple-agent-example"
+}

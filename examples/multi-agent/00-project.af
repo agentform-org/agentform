@@ -1,0 +1,7 @@
+// Multi-Agent Example
+// Multiple agents working together with conditional logic
+
+agentform {
+  version = "0.1"
+  project = "multi-agent-example"
+}

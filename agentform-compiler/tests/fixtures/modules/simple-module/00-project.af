@@ -1,0 +1,5 @@
+// Simple test module
+agentform {
+  version = "0.1"
+  project = "simple-test-module"
+}

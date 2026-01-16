@@ -1,5 +1,5 @@
 #!/bin/bash
-# Version bump script for ACP monorepo
+# Version bump script for Agentform monorepo
 # Usage: ./bump-version.sh [major|minor|patch]
 # Defaults to 'patch' if no argument provided
 
@@ -16,11 +16,11 @@ fi
 # Get the repository root (script is in .github/scripts/)
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
-# Read current version from acp-cli/pyproject.toml
-CURRENT_VERSION=$(grep -Po '(?<=^version = ")[^"]*' "$REPO_ROOT/acp-cli/pyproject.toml")
+# Read current version from agentform-cli/pyproject.toml
+CURRENT_VERSION=$(grep -Po '(?<=^version = ")[^"]*' "$REPO_ROOT/agentform-cli/pyproject.toml")
 
 if [[ -z "$CURRENT_VERSION" ]]; then
-    echo "Error: Could not read current version from acp-cli/pyproject.toml"
+    echo "Error: Could not read current version from agentform-cli/pyproject.toml"
     exit 1
 fi
 
@@ -50,11 +50,11 @@ echo "New version: $NEW_VERSION"
 
 # List of pyproject.toml files to update
 PYPROJECT_FILES=(
-    "acp-cli/pyproject.toml"
-    "acp-compiler/pyproject.toml"
-    "acp-mcp/pyproject.toml"
-    "acp-runtime/pyproject.toml"
-    "acp-schema/pyproject.toml"
+    "agentform-cli/pyproject.toml"
+    "agentform-compiler/pyproject.toml"
+    "agentform-mcp/pyproject.toml"
+    "agentform-runtime/pyproject.toml"
+    "agentform-schema/pyproject.toml"
 )
 
 # Update all pyproject.toml files
@@ -69,10 +69,10 @@ for file in "${PYPROJECT_FILES[@]}"; do
 done
 
 # Update version.py
-VERSION_PY="$REPO_ROOT/acp-schema/acp_schema/version.py"
+VERSION_PY="$REPO_ROOT/agentform-schema/agentform_schema/version.py"
 if [[ -f "$VERSION_PY" ]]; then
     sed -i "s/^VERSION = \".*\"/VERSION = \"$NEW_VERSION\"/" "$VERSION_PY"
-    echo "Updated acp-schema/acp_schema/version.py"
+    echo "Updated agentform-schema/agentform_schema/version.py"
 else
     echo "Warning: version.py not found"
 fi

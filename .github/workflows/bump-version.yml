@@ -75,8 +75,8 @@ jobs:
 
       - name: Configure Git
         run: |
-          git config user.name "acp-version-bot[bot]"
-          git config user.email "acp-version-bot[bot]@users.noreply.github.com"
+          git config user.name "agentform-version-bot[bot]"
+          git config user.email "agentform-version-bot[bot]@users.noreply.github.com"
 
       - name: Run version bump script
         id: bump
@@ -86,7 +86,7 @@ jobs:
 
       - name: Commit and push changes
         run: |
-          NEW_VERSION=$(grep -Po '(?<=^version = ")[^"]*' acp-cli/pyproject.toml)
+          NEW_VERSION=$(grep -Po '(?<=^version = ")[^"]*' agentform-cli/pyproject.toml)
           BUMP_TYPE="${{ steps.bump_type.outputs.bump_type }}"
           
           git add -A

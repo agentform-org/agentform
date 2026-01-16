@@ -1,7 +1,0 @@
-// PR Reviewer Example
-// An agent that reviews pull requests using GitHub MCP server
-
-acp {
-  version = "0.1"
-  project = "pr-reviewer"
-}

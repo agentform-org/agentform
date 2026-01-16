@@ -4,77 +4,77 @@
         lint-cli lint-compiler lint-mcp lint-runtime lint-schema \
         typecheck-cli typecheck-compiler typecheck-mcp typecheck-runtime typecheck-schema
 
-LIBS = acp-cli acp-compiler acp-mcp acp-runtime acp-schema
+LIBS = agentform-cli agentform-compiler agentform-mcp agentform-runtime agentform-schema
 
 # Install all libraries
 install: install-cli install-compiler install-mcp install-runtime install-schema
 
 install-cli:
-	cd acp-cli && poetry install
+	cd agentform-cli && poetry install
 
 install-compiler:
-	cd acp-compiler && poetry install
+	cd agentform-compiler && poetry install
 
 install-mcp:
-	cd acp-mcp && poetry install
+	cd agentform-mcp && poetry install
 
 install-runtime:
-	cd acp-runtime && poetry install
+	cd agentform-runtime && poetry install
 
 install-schema:
-	cd acp-schema && poetry install
+	cd agentform-schema && poetry install
 
 # Test all libraries
 test: test-cli test-compiler test-mcp test-runtime test-schema
 
 test-cli:
-	cd acp-cli && poetry run pytest
+	cd agentform-cli && poetry run pytest
 
 test-compiler:
-	cd acp-compiler && poetry run pytest
+	cd agentform-compiler && poetry run pytest
 
 test-mcp:
-	cd acp-mcp && poetry run pytest
+	cd agentform-mcp && poetry run pytest
 
 test-runtime:
-	cd acp-runtime && poetry run pytest
+	cd agentform-runtime && poetry run pytest
 
 test-schema:
-	cd acp-schema && poetry run pytest
+	cd agentform-schema && poetry run pytest
 
 # Lint all libraries
 lint: lint-cli lint-compiler lint-mcp lint-runtime lint-schema
 
 lint-cli:
-	cd acp-cli && poetry run ruff check .
+	cd agentform-cli && poetry run ruff check .
 
 lint-compiler:
-	cd acp-compiler && poetry run ruff check .
+	cd agentform-compiler && poetry run ruff check .
 
 lint-mcp:
-	cd acp-mcp && poetry run ruff check .
+	cd agentform-mcp && poetry run ruff check .
 
 lint-runtime:
-	cd acp-runtime && poetry run ruff check .
+	cd agentform-runtime && poetry run ruff check .
 
 lint-schema:
-	cd acp-schema && poetry run ruff check .
+	cd agentform-schema && poetry run ruff check .
 
 # Type check all libraries
 typecheck: typecheck-cli typecheck-compiler typecheck-mcp typecheck-runtime typecheck-schema
 
 typecheck-cli:
-	cd acp-cli && poetry run mypy .
+	cd agentform-cli && poetry run mypy .
 
 typecheck-compiler:
-	cd acp-compiler && poetry run mypy .
+	cd agentform-compiler && poetry run mypy .
 
 typecheck-mcp:
-	cd acp-mcp && poetry run mypy .
+	cd agentform-mcp && poetry run mypy .
 
 typecheck-runtime:
-	cd acp-runtime && poetry run mypy .
+	cd agentform-runtime && poetry run mypy .
 
 typecheck-schema:
-	cd acp-schema && poetry run mypy .
+	cd agentform-schema && poetry run mypy .
 

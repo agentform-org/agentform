@@ -1,5 +1,0 @@
-// Simple test module
-acp {
-  version = "0.1"
-  project = "simple-test-module"
-}

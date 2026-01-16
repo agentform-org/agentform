@@ -1,0 +1,10 @@
+// Filesystem Agent Example
+// An agent that can read, write, and analyze files using the filesystem MCP server
+//
+// This example uses the official @modelcontextprotocol/server-filesystem MCP server.
+// The server restricts file operations to the specified directory.
+
+agentform {
+  version = "0.1"
+  project = "filesystem-agent"
+}

@@ -56,36 +56,36 @@ jobs:
       - name: Update package version
         run: |
           VERSION=${{ steps.version.outputs.version }}
-          sed -i "s/^version = \".*\"/version = \"$VERSION\"/" acp-cli/pyproject.toml
-          echo "Updated acp-cli to version $VERSION"
+          sed -i "s/^version = \".*\"/version = \"$VERSION\"/" agentform-cli/pyproject.toml
+          echo "Updated agentform-cli to version $VERSION"
 
-      - name: Bundle all modules into acp-cli
+      - name: Bundle all modules into agentform-cli
         run: |
-          echo "Copying module directories into acp-cli/acp_cli/..."
+          echo "Copying module directories into agentform-cli/agentform_cli/..."
           
-          # Copy all module directories into acp_cli
-          cp -r acp-schema/acp_schema acp-cli/acp_cli/
-          cp -r acp-mcp/acp_mcp acp-cli/acp_cli/
-          cp -r acp-compiler/acp_compiler acp-cli/acp_cli/
-          cp -r acp-runtime/acp_runtime acp-cli/acp_cli/
+          # Copy all module directories into agentform_cli
+          cp -r agentform-schema/agentform_schema agentform-cli/agentform_cli/
+          cp -r agentform-mcp/agentform_mcp agentform-cli/agentform_cli/
+          cp -r agentform-compiler/agentform_compiler agentform-cli/agentform_cli/
+          cp -r agentform-runtime/agentform_runtime agentform-cli/agentform_cli/
           
           echo "Bundled modules:"
-          ls -la acp-cli/acp_cli/
+          ls -la agentform-cli/agentform_cli/
 
       - name: Rewrite imports
         run: |
-          echo "Rewriting imports to use acp_cli.* prefix..."
+          echo "Rewriting imports to use agentform_cli.* prefix..."
           
           # Rewrite all imports in Python files
-          find acp-cli/acp_cli -name "*.py" -type f -exec sed -i \
-            -e 's/from acp_schema/from acp_cli.acp_schema/g' \
-            -e 's/from acp_mcp/from acp_cli.acp_mcp/g' \
-            -e 's/from acp_compiler/from acp_cli.acp_compiler/g' \
-            -e 's/from acp_runtime/from acp_cli.acp_runtime/g' \
-            -e 's/import acp_schema/import acp_cli.acp_schema as acp_schema/g' \
-            -e 's/import acp_mcp/import acp_cli.acp_mcp as acp_mcp/g' \
-            -e 's/import acp_compiler/import acp_cli.acp_compiler as acp_compiler/g' \
-            -e 's/import acp_runtime/import acp_cli.acp_runtime as acp_runtime/g' \
+          find agentform-cli/agentform_cli -name "*.py" -type f -exec sed -i \
+            -e 's/from agentform_schema/from agentform_cli.agentform_schema/g' \
+            -e 's/from agentform_mcp/from agentform_cli.agentform_mcp/g' \
+            -e 's/from agentform_compiler/from agentform_cli.agentform_compiler/g' \
+            -e 's/from agentform_runtime/from agentform_cli.agentform_runtime/g' \
+            -e 's/import agentform_schema/import agentform_cli.agentform_schema as agentform_schema/g' \
+            -e 's/import agentform_mcp/import agentform_cli.agentform_mcp as agentform_mcp/g' \
+            -e 's/import agentform_compiler/import agentform_cli.agentform_compiler as agentform_compiler/g' \
+            -e 's/import agentform_runtime/import agentform_cli.agentform_runtime as agentform_runtime/g' \
             {} \;
           
           echo "Import rewriting complete"
@@ -93,13 +93,13 @@ jobs:
       - name: Remove dev dependencies from pyproject.toml
         run: |
           # Remove the dev dependencies section (path-based deps) before building
-          sed -i '/\[tool.poetry.group.dev.dependencies\]/,/^\[/{ /^\[tool.poetry.group.dev.dependencies\]/d; /^\[/!d; }' acp-cli/pyproject.toml
+          sed -i '/\[tool.poetry.group.dev.dependencies\]/,/^\[/{ /^\[tool.poetry.group.dev.dependencies\]/d; /^\[/!d; }' agentform-cli/pyproject.toml
           
           echo "Final pyproject.toml:"
-          cat acp-cli/pyproject.toml
+          cat agentform-cli/pyproject.toml
 
       - name: Build package
-        working-directory: acp-cli
+        working-directory: agentform-cli
         run: |
           poetry build
           echo "Built packages:"
@@ -108,4 +108,4 @@ jobs:
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          packages-dir: acp-cli/dist/
+          packages-dir: agentform-cli/dist/

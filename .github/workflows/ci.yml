@@ -51,26 +51,26 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd acp-schema && poetry install --no-interaction
-          cd ../acp-compiler && poetry install --no-interaction
-          cd ../acp-mcp && poetry install --no-interaction
-          cd ../acp-runtime && poetry install --no-interaction
-          cd ../acp-cli && poetry install --no-interaction
+          cd agentform-schema && poetry install --no-interaction
+          cd ../agentform-compiler && poetry install --no-interaction
+          cd ../agentform-mcp && poetry install --no-interaction
+          cd ../agentform-runtime && poetry install --no-interaction
+          cd ../agentform-cli && poetry install --no-interaction
 
-      - name: Run mypy on acp-schema
-        run: cd acp-schema && poetry run mypy acp_schema
+      - name: Run mypy on agentform-schema
+        run: cd agentform-schema && poetry run mypy agentform_schema
 
-      - name: Run mypy on acp-compiler
-        run: cd acp-compiler && poetry run mypy acp_compiler
+      - name: Run mypy on agentform-compiler
+        run: cd agentform-compiler && poetry run mypy agentform_compiler
 
-      - name: Run mypy on acp-mcp
-        run: cd acp-mcp && poetry run mypy acp_mcp
+      - name: Run mypy on agentform-mcp
+        run: cd agentform-mcp && poetry run mypy agentform_mcp
 
-      - name: Run mypy on acp-runtime
-        run: cd acp-runtime && poetry run mypy acp_runtime
+      - name: Run mypy on agentform-runtime
+        run: cd agentform-runtime && poetry run mypy agentform_runtime
 
-      - name: Run mypy on acp-cli
-        run: cd acp-cli && poetry run mypy acp_cli
+      - name: Run mypy on agentform-cli
+        run: cd agentform-cli && poetry run mypy agentform_cli
 
   test:
     name: Test (${{ matrix.package }} / Python ${{ matrix.python-version }})
@@ -80,11 +80,11 @@ jobs:
       matrix:
         python-version: ["3.11", "3.12"]
         package:
-          - acp-schema
-          - acp-compiler
-          - acp-mcp
-          - acp-runtime
-          - acp-cli
+          - agentform-schema
+          - agentform-compiler
+          - agentform-mcp
+          - agentform-runtime
+          - agentform-cli
 
     steps:
       - uses: actions/checkout@v6
@@ -109,21 +109,21 @@ jobs:
           restore-keys: |
             venv-${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.package }}-
 
-      - name: Install dependencies for acp-schema
-        if: matrix.package != 'acp-schema'
-        run: cd acp-schema && poetry install --no-interaction
+      - name: Install dependencies for agentform-schema
+        if: matrix.package != 'agentform-schema'
+        run: cd agentform-schema && poetry install --no-interaction
 
-      - name: Install dependencies for acp-compiler
-        if: matrix.package == 'acp-compiler' || matrix.package == 'acp-runtime' || matrix.package == 'acp-cli'
-        run: cd acp-compiler && poetry install --no-interaction
+      - name: Install dependencies for agentform-compiler
+        if: matrix.package == 'agentform-compiler' || matrix.package == 'agentform-runtime' || matrix.package == 'agentform-cli'
+        run: cd agentform-compiler && poetry install --no-interaction
 
-      - name: Install dependencies for acp-mcp
-        if: matrix.package == 'acp-mcp' || matrix.package == 'acp-runtime' || matrix.package == 'acp-cli'
-        run: cd acp-mcp && poetry install --no-interaction
+      - name: Install dependencies for agentform-mcp
+        if: matrix.package == 'agentform-mcp' || matrix.package == 'agentform-runtime' || matrix.package == 'agentform-cli'
+        run: cd agentform-mcp && poetry install --no-interaction
 
-      - name: Install dependencies for acp-runtime
-        if: matrix.package == 'acp-runtime' || matrix.package == 'acp-cli'
-        run: cd acp-runtime && poetry install --no-interaction
+      - name: Install dependencies for agentform-runtime
+        if: matrix.package == 'agentform-runtime' || matrix.package == 'agentform-cli'
+        run: cd agentform-runtime && poetry install --no-interaction
 
       - name: Install package dependencies
         run: cd ${{ matrix.package }} && poetry install --no-interaction

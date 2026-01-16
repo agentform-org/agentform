@@ -1,0 +1,41 @@
+[tool.poetry]
+name = "agentform-api"
+version = "0.0.801"
+description = "Python SDK for programmatic Agentform usage"
+authors = ["Agentform Team"]
+readme = "README.md"
+license = "Apache-2.0"
+packages = [{include = "agentform_api"}]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[tool.poetry.urls]
+"Homepage" = "https://github.com/agentform-team/agentform"
+"Repository" = "https://github.com/agentform-team/agentform"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+agentform-schema = {path = "../agentform-schema", develop = true}
+agentform-compiler = {path = "../agentform-compiler", develop = true}
+agentform-runtime = {path = "../agentform-runtime", develop = true}
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0"
+pytest-asyncio = "^0.24"
+pytest-cov = "^4.1"
+ruff = "^0.8"
+mypy = "^1.8"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

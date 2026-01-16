@@ -20,13 +20,13 @@
 
 ## Affected Components
 
-<!-- Which parts of ACP would this affect? (CLI, compiler, runtime, schema, MCP, etc.) -->
+<!-- Which parts of Agentform would this affect? (CLI, compiler, runtime, schema, MCP, etc.) -->
 
-- [ ] CLI (`acp-cli`)
-- [ ] Compiler (`acp-compiler`)
-- [ ] Runtime (`acp-runtime`)
-- [ ] Schema (`acp-schema`)
-- [ ] MCP Integration (`acp-mcp`)
-- [ ] ACP Language/Syntax
+- [ ] CLI (`agentform-cli`)
+- [ ] Compiler (`agentform-compiler`)
+- [ ] Runtime (`agentform-runtime`)
+- [ ] Schema (`agentform-schema`)
+- [ ] MCP Integration (`agentform-mcp`)
+- [ ] Agentform Language/Syntax
 - [ ] Documentation
 - [ ] VS Code Extension

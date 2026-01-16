@@ -1,10 +1,10 @@
 # Multi-Agent Example
 
-An ACP example demonstrating multiple agents working together with conditional logic to route tasks appropriately.
+An Agentform example demonstrating multiple agents working together with conditional logic to route tasks appropriately.
 
 ## Overview
 
-This example showcases advanced ACP features including:
+This example showcases advanced Agentform features including:
 - **Multiple LLM providers**: OpenAI and Anthropic working together
 - **Agent specialization**: Different agents for different task complexities
 - **Conditional routing**: Dynamic workflow paths based on classification results
@@ -14,12 +14,12 @@ This example showcases advanced ACP features including:
 
 ```
 multi-agent/
-├── 00-project.acp      # Project metadata (acp block)
-├── 01-variables.acp    # Variable definitions
-├── 02-providers.acp    # Provider and model definitions
-├── 03-policies.acp     # Policy definitions
-├── 04-agents.acp       # Agent definitions
-├── 05-workflows.acp    # Workflow definitions
+├── 00-project.agentform      # Project metadata (agentform block)
+├── 01-variables.agentform    # Variable definitions
+├── 02-providers.agentform    # Provider and model definitions
+├── 03-policies.agentform     # Policy definitions
+├── 04-agents.agentform       # Agent definitions
+├── 05-workflows.agentform    # Workflow definitions
 ├── input.yaml          # Sample input
 └── README.md
 ```
@@ -37,19 +37,19 @@ Run from the example directory:
 cd examples/multi-agent
 
 # Run with provided input
-acp run smart_respond \
+agentform run smart_respond \
   --var openai_api_key=$OPENAI_API_KEY \
   --var anthropic_api_key=$ANTHROPIC_API_KEY \
   --input-file input.yaml
 
 # Simple task (routed to quick_responder)
-acp run smart_respond \
+agentform run smart_respond \
   --var openai_api_key=$OPENAI_API_KEY \
   --var anthropic_api_key=$ANTHROPIC_API_KEY \
   --input '{"task": "What is 2+2?"}'
 
 # Complex task (routed to deep_analyst)
-acp run smart_respond \
+agentform run smart_respond \
   --var openai_api_key=$OPENAI_API_KEY \
   --var anthropic_api_key=$ANTHROPIC_API_KEY \
   --input '{"task": "Analyze the pros and cons of remote work policies"}'
@@ -58,12 +58,12 @@ acp run smart_respond \
 To validate:
 
 ```bash
-acp validate --var openai_api_key=test --var anthropic_api_key=test
+agentform validate --var openai_api_key=test --var anthropic_api_key=test
 ```
 
 ## Key Concepts
 
-### Multiple Providers (`02-providers.acp`)
+### Multiple Providers (`02-providers.agentform`)
 
 Configure different LLM providers:
 
@@ -79,7 +79,7 @@ provider "llm.anthropic" "default" {
 }
 ```
 
-### Differentiated Policies (`03-policies.acp`)
+### Differentiated Policies (`03-policies.agentform`)
 
 ```hcl
 policy "fast" {
@@ -93,7 +93,7 @@ policy "thorough" {
 }
 ```
 
-### Specialized Agents (`04-agents.acp`)
+### Specialized Agents (`04-agents.agentform`)
 
 Each agent has a specific role:
 
@@ -101,7 +101,7 @@ Each agent has a specific role:
 - **quick_responder**: Brief answers using GPT-4o
 - **deep_analyst**: Thorough analysis using Claude Sonnet
 
-### Conditional Workflow (`05-workflows.acp`)
+### Conditional Workflow (`05-workflows.agentform`)
 
 ```hcl
 step "route" {
