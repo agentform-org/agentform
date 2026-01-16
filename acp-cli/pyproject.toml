@@ -34,6 +34,8 @@ structlog = "^24.1.0"
 # From acp-schema
 pydantic = "^2.5"
 pyyaml = "^6.0"
+# From acp-compiler
+lark = "^1.1"
 # From acp-mcp
 anyio = "^4.2"
 # From acp-runtime
