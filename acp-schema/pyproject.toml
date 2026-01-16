@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "acp-schema"
-version = "0.0.2"
+version = "0.0.800"
 description = "Core data models and YAML schemas for ACP"
 authors = ["ACP Team"]
 readme = "README.md"

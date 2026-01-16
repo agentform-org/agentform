@@ -1,0 +1,122 @@
+name: Auto Version Bump
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  bump-version:
+    # Run on PR merge OR direct push to main (but not both)
+    # - PR merge: use pull_request event (has direct label access)
+    # - Direct push: use push event, but skip merge commits (they trigger pull_request event)
+    # - Skip version bump commits to prevent loops
+    if: |
+      (github.event_name == 'pull_request' && github.event.pull_request.merged == true) ||
+      (github.event_name == 'push' && 
+       !startsWith(github.event.head_commit.message, 'Merge pull request') &&
+       !contains(github.event.head_commit.message, '[version bump]') && 
+       !contains(github.event.head_commit.message, '[skip version]'))
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check for skip conditions (PR merge)
+        if: github.event_name == 'pull_request'
+        id: skip_check_pr
+        run: |
+          # Get the merge commit message
+          MERGE_MSG="${{ github.event.pull_request.title }}"
+          if [[ "$MERGE_MSG" == *"[skip version]"* ]] || [[ "$MERGE_MSG" == *"[version bump]"* ]]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "Skipping version bump due to commit message"
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Skip if needed
+        if: steps.skip_check_pr.outputs.skip == 'true'
+        run: |
+          echo "Skipping version bump"
+          exit 0
+
+      - name: Determine bump type from PR labels
+        id: bump_type
+        run: |
+          BUMP_TYPE="patch"  # Default to patch
+          
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            # Direct access to PR labels
+            LABELS='${{ toJson(github.event.pull_request.labels.*.name) }}'
+            echo "PR Labels: $LABELS"
+            
+            # Check labels with priority: major > minor > patch
+            if echo "$LABELS" | grep -q '"major"'; then
+              BUMP_TYPE="major"
+            elif echo "$LABELS" | grep -q '"minor"'; then
+              BUMP_TYPE="minor"
+            elif echo "$LABELS" | grep -q '"patch"'; then
+              BUMP_TYPE="patch"
+            fi
+          else
+            # Push event - try to find associated PR via API
+            echo "Push event - querying for associated PR..."
+            COMMIT_SHA="${{ github.sha }}"
+            
+            # Query GitHub API for PRs associated with this commit
+            PR_DATA=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/repos/${{ github.repository }}/commits/${COMMIT_SHA}/pulls")
+            
+            if [ "$(echo "$PR_DATA" | jq 'length')" -gt 0 ]; then
+              LABELS=$(echo "$PR_DATA" | jq -r '.[0].labels[].name' 2>/dev/null || echo "")
+              echo "Found PR labels: $LABELS"
+              
+              if echo "$LABELS" | grep -q "^major$"; then
+                BUMP_TYPE="major"
+              elif echo "$LABELS" | grep -q "^minor$"; then
+                BUMP_TYPE="minor"
+              elif echo "$LABELS" | grep -q "^patch$"; then
+                BUMP_TYPE="patch"
+              fi
+            else
+              echo "No associated PR found, defaulting to patch"
+            fi
+          fi
+          
+          echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
+          echo "Determined bump type: $BUMP_TYPE"
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Run version bump script
+        id: bump
+        run: |
+          chmod +x .github/scripts/bump-version.sh
+          .github/scripts/bump-version.sh "${{ steps.bump_type.outputs.bump_type }}"
+
+      - name: Commit and push changes
+        run: |
+          NEW_VERSION=$(grep -Po '(?<=^version = ")[^"]*' acp-cli/pyproject.toml)
+          BUMP_TYPE="${{ steps.bump_type.outputs.bump_type }}"
+          
+          git add -A
+          git commit -m "[version bump] Bump version to ${NEW_VERSION} (${BUMP_TYPE})"
+          git tag "v${NEW_VERSION}"
+          git push origin main
+          git push origin "v${NEW_VERSION}"
+          
+          echo "Successfully bumped version to ${NEW_VERSION} and created tag v${NEW_VERSION}"

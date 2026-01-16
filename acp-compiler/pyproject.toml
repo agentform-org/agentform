@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "acp-compiler"
-version = "0.0.2"
+version = "0.0.800"
 description = "ACP native schema compilation and validation"
 authors = ["ACP Team"]
 readme = "README.md"

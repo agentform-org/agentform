@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "acp-cli"
-version = "0.0.2"
+version = "0.0.800"
 description = "CLI interface for ACP"
 authors = ["ACP Team"]
 readme = "README.md"
