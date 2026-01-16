@@ -26,11 +26,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Generate a token from the GitHub App to bypass branch protection
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Check for skip conditions (PR merge)
         if: github.event_name == 'pull_request'
@@ -99,8 +107,8 @@ jobs:
 
       - name: Configure Git
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "acp-version-bot[bot]"
+          git config user.email "acp-version-bot[bot]@users.noreply.github.com"
 
       - name: Run version bump script
         id: bump
