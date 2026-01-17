@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="1200" height="300" alt="Agentform™" src="https://github.com/user-attachments/assets/40707d9d-ea9c-448b-8c0e-d7b6c1a14140" />
+  <img width="1200" height="300" alt="Agentform" src="https://github.com/user-attachments/assets/40707d9d-ea9c-448b-8c0e-d7b6c1a14140" />
 </p>
 
 <p align="center">
@@ -23,7 +23,7 @@
 
 ## Table of Contents
 
-- [Why Agentform™?](#why-agentform)
+- [Why Agentform?](#why-agentform)
 - [Installation](#installation)
   - [Quick Install (Recommended)](#quick-install-recommended)
   - [Verify Installation](#verify-installation)
@@ -46,7 +46,7 @@
 
 ## Why Agentform™?
 
-Most AI agent frameworks require you to write imperative code - managing state, handling retries, wiring up tools. Agentform™ takes a different approach: **describe your agents declaratively in Agentform™ native schema, and let the runtime engine handle the rest.**
+Most AI agent frameworks require you to write imperative code - managing state, handling retries, wiring up tools. Agentform takes a different approach: **describe your agents declaratively in Agentform native schema, and let the runtime engine handle the rest.**
 
 ```hcl
 agent "reviewer" {
@@ -183,7 +183,7 @@ agentform run ask --spec my-agent.agentform --input '{"question": "What is the c
 
 ## Architecture
 
-Agentform™ is built as a modular system with five core packages:
+Agentform is built as a modular system with five core packages:
 
 ```mermaid
 flowchart TB
@@ -225,7 +225,7 @@ flowchart TB
 
 ## Examples
 
-The [`examples/`](examples/) directory contains ready-to-use configurations demonstrating various Agentform™ features. Each example includes detailed documentation explaining the concepts it covers.
+The [`examples/`](examples/) directory contains ready-to-use configurations demonstrating various Agentform features. Each example includes detailed documentation explaining the concepts it covers.
 
 **[Browse all examples →](examples/)**
 
@@ -240,7 +240,7 @@ agentform run ask --var openai_api_key=$OPENAI_API_KEY --input '{"question": "He
 
 ## Modules
 
-Agentform™ supports a **Terraform-style module system** for creating reusable, shareable agent configurations. Modules let you package providers, policies, agents, and workflows together, making it easy for others to use without extensive configuration.
+Agentform supports a **Terraform-style module system** for creating reusable, shareable agent configurations. Modules let you package providers, policies, agents, and workflows together, making it easy for others to use without extensive configuration.
 
 ### Using Modules
 
@@ -443,7 +443,7 @@ poetry run pytest --cov=agentform_runtime
 ```
 agentform/
 ├── agentform-schema/      # Core data models
-├── agentform-compiler/    # Agentform™ parser and validator
+├── agentform-compiler/    # Agentform parser and validator
 ├── agentform-runtime/     # Workflow execution engine
 ├── agentform-mcp/         # MCP client integration
 ├── agentform-cli/         # Command-line interface
