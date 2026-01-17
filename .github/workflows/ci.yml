@@ -122,7 +122,7 @@ jobs:
         run: cd agentform-mcp && poetry install --no-interaction
 
       - name: Install dependencies for agentform-runtime
-        if: matrix.package == 'agentform-runtime' || matrix.package == 'agentform-cli'
+        if: matrix.package == 'agentform-cli'
         run: cd agentform-runtime && poetry install --no-interaction
 
       - name: Install package dependencies
