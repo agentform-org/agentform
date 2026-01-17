@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if page.title %}{{ page.title }} - {% endif %}{{ site.title }}</title>
+    <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><a href="{{ '/' | relative_url }}">{{ site.title }}</a></h1>
+            <nav>
+                <ul>
+                    {% for item in site.navigation %}
+                    <li><a href="{{ item.url | relative_url }}" {% if page.url == item.url or page.url == item.url | remove: '/' %}class="active"{% endif %}>{{ item.title }}</a></li>
+                    {% endfor %}
+                </ul>
+            </nav>
+        </header>
+        
+        <main>
+            {{ content }}
+        </main>
+        
+        <footer>
+            <p>Built with ❤️ for the AI agent community</p>
+            <p><a href="https://github.com/agentform-team/agentform">GitHub</a> | <a href="https://pypi.org/project/agentform-cli/">PyPI</a></p>
+        </footer>
+    </div>
+</body>
+</html>

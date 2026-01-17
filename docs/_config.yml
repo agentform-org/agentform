@@ -1,0 +1,42 @@
+title: Agentform Documentation
+description: Define AI agent systems declaratively using Agentform native schema
+
+# GitHub Pages settings
+github: [metadata]
+baseurl: "" # the subpath of your site, e.g. /blog
+url: "" # the base hostname & protocol for your site
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+kramdown:
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    block: all
+    span:
+      line_numbers: false
+    block:
+      line_numbers: true
+
+# Navigation (used by our custom layout)
+navigation:
+  - title: Home
+    url: /
+  - title: Getting Started
+    url: /getting-started/
+  - title: Examples
+    url: /examples/
+  - title: Modules
+    url: /modules/
+  - title: CLI Reference
+    url: /cli-reference/
+  - title: Architecture
+    url: /architecture/
+
+# Exclude from processing
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - README.md
