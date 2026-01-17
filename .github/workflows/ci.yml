@@ -114,11 +114,11 @@ jobs:
         run: cd agentform-schema && poetry install --no-interaction
 
       - name: Install dependencies for agentform-compiler
-        if: matrix.package == 'agentform-compiler' || matrix.package == 'agentform-runtime' || matrix.package == 'agentform-cli'
+        if: matrix.package == 'agentform-runtime' || matrix.package == 'agentform-cli'
         run: cd agentform-compiler && poetry install --no-interaction
 
       - name: Install dependencies for agentform-mcp
-        if: matrix.package == 'agentform-mcp' || matrix.package == 'agentform-runtime' || matrix.package == 'agentform-cli'
+        if: matrix.package == 'agentform-runtime' || matrix.package == 'agentform-cli'
         run: cd agentform-mcp && poetry install --no-interaction
 
       - name: Install dependencies for agentform-runtime
