@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "agentform-compiler"
-version = "0.0.806"
+version = "0.0.808"
 description = "Agentform native schema compilation and validation"
 authors = ["Agentform Team"]
 readme = "README.md"

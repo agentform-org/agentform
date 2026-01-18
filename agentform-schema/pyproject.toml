@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "agentform-schema"
-version = "0.0.806"
+version = "0.0.808"
 description = "Core data models and YAML schemas for Agentform"
 authors = ["Agentform Team"]
 readme = "README.md"

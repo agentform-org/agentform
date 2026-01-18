@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "agentform-mcp"
-version = "0.0.806"
+version = "0.0.808"
 description = "MCP server integration for Agentform"
 authors = ["Agentform Team"]
 readme = "README.md"

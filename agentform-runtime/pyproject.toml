@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "agentform-runtime"
-version = "0.0.806"
+version = "0.0.808"
 description = "Workflow execution engine for Agentform"
 authors = ["Agentform Team"]
 readme = "README.md"
