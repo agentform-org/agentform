@@ -15,6 +15,7 @@
 <p align="center">
   <a href="https://agentform.co"><img src="https://img.shields.io/badge/website-agentform.co-6366f1?style=flat-square" alt="Website"></a>
   <a href="https://pypi.org/project/agentform-cli/"><img src="https://img.shields.io/pypi/v/agentform-cli?style=flat-square&color=6366f1" alt="PyPI version"></a>
+  <a href="https://github.com/agentform-org/agentform-vscode"><img src="https://img.shields.io/badge/VS%20Code-extension-6366f1?style=flat-square" alt="VS Code Extension"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-22c55e?style=flat-square" alt="Apache License 2.0"></a>
   <a href="#"><img src="https://img.shields.io/badge/status-alpha-f97316?style=flat-square" alt="Alpha"></a>
 </p>
@@ -57,7 +58,7 @@ agent "reviewer" {
 }
 ```
 
-**The result:** Your agent configurations become version-controlled artifacts that are easy to review, share, and reproduce. The native `.agentform` format provides type safety, explicit references, and improved editor support.
+**The result:** Your agent configurations become version-controlled artifacts that are easy to review, share, and reproduce. The native `.af` format provides type safety, explicit references, and improved editor support.
 
 <br />
 
@@ -90,7 +91,7 @@ export OPENAI_API_KEY="your-openai-key"
 
 ### 2. Create an agent spec
 
-Create a file called `my-agent.agentform`:
+Create a file called `my-agent.af`:
 
 ```hcl
 agentform {
@@ -158,10 +159,10 @@ workflow "ask" {
 
 ```bash
 # Validate your spec
-agentform validate my-agent.agentform
+agentform validate my-agent.af
 
 # Run with input
-agentform run ask --spec my-agent.agentform --input '{"question": "What is the capital of France?"}'
+agentform run ask --spec my-agent.af --input '{"question": "What is the capital of France?"}'
 ```
 
 <br />
@@ -170,7 +171,7 @@ agentform run ask --spec my-agent.agentform --input '{"question": "What is the c
 
 | Feature | Description |
 |---------|-------------|
-| **Native Schema** | Define agents, workflows, and policies in type-safe `.agentform` format with explicit references |
+| **Native Schema** | Define agents, workflows, and policies in type-safe `.af` format with explicit references |
 | **Modules** | Terraform-style reusable modules for sharing agent configurations via Git |
 | **Multi-Provider** | Use OpenAI, Anthropic, or other LLM providers interchangeably |
 | **Multi-Agent** | Coordinate multiple specialized agents with conditional routing |
@@ -188,7 +189,7 @@ Agentform is built as a modular system with five core packages:
 ```mermaid
 flowchart TB
     subgraph User["User Layer"]
-        Agentform["📄 .agentform Spec"]
+        Agentform["📄 .af Spec"]
         CLI["⚡ agentform-cli"]
         Agentform --> CLI
     end
@@ -216,7 +217,7 @@ flowchart TB
 | Package | Description |
 |---------|-------------|
 | **agentform-schema** | Core Pydantic models for specs and Intermediate Representation |
-| **agentform-compiler** | Parses `.agentform` files, validates specs, and generates IR for the runtime |
+| **agentform-compiler** | Parses `.af` files, validates specs, and generates IR for the runtime |
 | **agentform-runtime** | Workflow execution engine with LLM integration and policy enforcement |
 | **agentform-mcp** | MCP (Model Context Protocol) client for connecting to external tool servers |
 | **agentform-cli** | Command-line interface for validating and running workflows |
@@ -263,7 +264,7 @@ The `//` syntax separates the repository URL from the subdirectory path (like Te
 
 #### 2. Initialize your project
 
-Download all external modules to your local `.agentform/modules/` directory:
+Download all external modules to your local `.af/modules/` directory:
 
 ```bash
 agentform init
@@ -297,19 +298,19 @@ agentform run module.pr-reviewer.review_workflow .
 
 ### Creating Modules
 
-A module is simply a directory containing `.agentform` files. To create a shareable module:
+A module is simply a directory containing `.af` files. To create a shareable module:
 
 #### 1. Create the module structure
 
 ```
 my-module/
-├── 00-project.agentform      # Module metadata
-├── 01-variables.agentform    # Input parameters (variables)
-├── 02-providers.agentform    # LLM providers
-├── 03-policies.agentform     # Policies
-├── 04-models.agentform       # Model configurations
-├── 05-agents.agentform       # Agent definitions
-└── 06-workflows.agentform    # Workflows (optional)
+├── 00-project.af      # Module metadata
+├── 01-variables.af    # Input parameters (variables)
+├── 02-providers.af    # LLM providers
+├── 03-policies.af     # Policies
+├── 04-models.af       # Model configurations
+├── 05-agents.af       # Agent definitions
+└── 06-workflows.af    # Workflows (optional)
 ```
 
 #### 2. Define input variables
@@ -317,7 +318,7 @@ my-module/
 Variables without defaults become required parameters:
 
 ```hcl
-// 01-variables.agentform
+// 01-variables.af
 variable "api_key" {
   type        = string
   description = "API key for the LLM provider"
@@ -356,18 +357,18 @@ module "my-module" {
 
 ### Module Caching
 
-Modules are cached in `.agentform/modules/` within your project directory:
+Modules are cached in `.af/modules/` within your project directory:
 
 ```
 my-project/
-├── .agentform/
+├── .af/
 │   └── modules/
 │       └── github_com_org_repo_abc123/  # Cached module
-├── 00-project.agentform
-└── 01-modules.agentform
+├── 00-project.af
+└── 01-modules.af
 ```
 
-Add `.agentform/` to your `.gitignore` - these are downloaded dependencies.
+Add `.af/` to your `.gitignore` - these are downloaded dependencies.
 
 <br />
 
@@ -387,7 +388,7 @@ agentform compile <spec-file> [--output output.json]
 agentform run <workflow-name> [options]
 
 Options:
-  -s, --spec PATH        Path to .agentform spec file (default: agentform.agentform)
+  -s, --spec PATH        Path to .af spec file (default: agentform.af)
   -i, --input JSON       Input data as JSON string
   -f, --input-file PATH  Input data from JSON file
   -o, --output PATH      Write output to file
@@ -447,7 +448,7 @@ agentform/
 ├── agentform-runtime/     # Workflow execution engine
 ├── agentform-mcp/         # MCP client integration
 ├── agentform-cli/         # Command-line interface
-└── examples/        # Example configurations (.agentform format)
+└── examples/        # Example configurations (.af format)
 ```
 
 ## License
