@@ -78,14 +78,14 @@ jobs:
           
           # Rewrite all imports in Python files
           find agentform-cli/agentform_cli -name "*.py" -type f -exec sed -i \
-            -e 's/from agentform_schema/from agentform_cli.af_schema/g' \
-            -e 's/from agentform_mcp/from agentform_cli.af_mcp/g' \
-            -e 's/from agentform_compiler/from agentform_cli.af_compiler/g' \
-            -e 's/from agentform_runtime/from agentform_cli.af_runtime/g' \
-            -e 's/import agentform_schema/import agentform_cli.af_schema as agentform_schema/g' \
-            -e 's/import agentform_mcp/import agentform_cli.af_mcp as agentform_mcp/g' \
-            -e 's/import agentform_compiler/import agentform_cli.af_compiler as agentform_compiler/g' \
-            -e 's/import agentform_runtime/import agentform_cli.af_runtime as agentform_runtime/g' \
+            -e 's/from agentform_schema/from agentform_cli.agentform_schema/g' \
+            -e 's/from agentform_mcp/from agentform_cli.agentform_mcp/g' \
+            -e 's/from agentform_compiler/from agentform_cli.agentform_compiler/g' \
+            -e 's/from agentform_runtime/from agentform_cli.agentform_runtime/g' \
+            -e 's/import agentform_schema/import agentform_cli.agentform_schema as agentform_schema/g' \
+            -e 's/import agentform_mcp/import agentform_cli.agentform_mcp as agentform_mcp/g' \
+            -e 's/import agentform_compiler/import agentform_cli.agentform_compiler as agentform_compiler/g' \
+            -e 's/import agentform_runtime/import agentform_cli.agentform_runtime as agentform_runtime/g' \
             {} \;
           
           echo "Import rewriting complete"
