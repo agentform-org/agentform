@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "agentform-cli"
-version = "0.0.808"
+version = "0.0.809"
 description = "CLI interface for Agentform"
 authors = ["Agentform Team"]
 readme = "README.md"
