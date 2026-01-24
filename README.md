@@ -19,8 +19,10 @@
   <a href="#"><img src="https://img.shields.io/badge/status-alpha-f97316?style=flat-square" alt="Alpha"></a>
 </p>
 
+<br />
+
 <p align="center">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/jw9SKOUKaoo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+  [![Watch the video](https://img.youtube.com/vi/jw9SKOUKaoo/maxresdefault.jpg)](https://youtu.be/jw9SKOUKaoo)
 </p>
 
 ---
