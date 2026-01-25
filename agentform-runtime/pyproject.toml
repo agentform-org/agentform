@@ -25,7 +25,7 @@ agentform-schema = {path = "../agentform-schema", develop = true}
 agentform-mcp = {path = "../agentform-mcp", develop = true}
 agentform-compiler = {path = "../agentform-compiler", develop = true}
 pydantic = "^2.5"
-langchain = "^0.3"
+langchain = "^1.2"
 # Provider-specific packages (langchain-openai, langchain-anthropic, etc.) must be installed
 # by running 'agentform init' in your project directory. No providers are installed by default.
 anyio = "^4.2"
@@ -33,9 +33,9 @@ structlog = "^25.5.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0"
-pytest-asyncio = "^0.24"
-pytest-cov = "^4.1"
-ruff = "^0.8"
+pytest-asyncio = "^1.3"
+pytest-cov = "^7.0"
+ruff = "^0.14"
 mypy = "^1.8"
 
 [tool.pytest.ini_options]
