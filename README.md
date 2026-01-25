@@ -13,15 +13,19 @@
 <br />
 
 <p align="center">
-  <a href="https://agentform.co"><img src="https://img.shields.io/badge/website-agentform.co-6366f1?style=flat-square" alt="Website"></a>
-  <a href="https://pypi.org/project/agentform-cli/"><img src="https://img.shields.io/pypi/v/agentform-cli?style=flat-square&color=6366f1" alt="PyPI version"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-22c55e?style=flat-square" alt="Apache License 2.0"></a>
-  <a href="#"><img src="https://img.shields.io/badge/status-alpha-f97316?style=flat-square" alt="Alpha"></a>
+  <a href="https://github.com/agentform-org/agentform/actions/workflows/CI.yml?branch=main"><img src="https://img.shields.io/github/actions/workflow/status/agentform-org/agentform/ci.yml?branch=main&style=for-the-badge" alt="CI status"></a>
+  <a href="https://github.com/agentform-org/agentform/releases"><img src="https://img.shields.io/github/v/release/agentform-org/agentform?include_prereleases&style=for-the-badge" alt="GitHub release"></a>
+  <a href="https://deepwiki.com/agentform-org/agentform"><img src="https://img.shields.io/badge/DeepWiki-agentform-111111?style=for-the-badge" alt="DeepWiki"></a>
+  <a href="https://discord.gg/clawd"><img src="https://img.shields.io/discord/1456350064065904867?label=Discord&logo=discord&logoColor=white&color=5865F2&style=for-the-badge" alt="Discord"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=for-the-badge" alt="Apache 2.0 License"></a>
 </p>
 
-<br />
-
-[![Watch the video](https://img.youtube.com/vi/jw9SKOUKaoo/maxresdefault.jpg)](https://youtu.be/jw9SKOUKaoo)
+git c<p align="center">
+  <video width="800" controls>
+    <source src="docs/assets/Agentform Promo.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+</p>
 
 ---
 
