@@ -16,15 +16,7 @@
   <a href="https://github.com/agentform-org/agentform/actions/workflows/CI.yml?branch=main"><img src="https://img.shields.io/github/actions/workflow/status/agentform-org/agentform/ci.yml?branch=main&style=for-the-badge" alt="CI status"></a>
   <a href="https://github.com/agentform-org/agentform/releases"><img src="https://img.shields.io/github/v/release/agentform-org/agentform?include_prereleases&style=for-the-badge" alt="GitHub release"></a>
   <a href="https://deepwiki.com/agentform-org/agentform"><img src="https://img.shields.io/badge/DeepWiki-agentform-111111?style=for-the-badge" alt="DeepWiki"></a>
-  <a href="https://discord.gg/clawd"><img src="https://img.shields.io/discord/1456350064065904867?label=Discord&logo=discord&logoColor=white&color=5865F2&style=for-the-badge" alt="Discord"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=for-the-badge" alt="Apache 2.0 License"></a>
-</p>
-
-git c<p align="center">
-  <video width="800" controls>
-    <source src="docs/assets/Agentform Promo.mp4" type="video/mp4">
-    Your browser does not support the video tag.
-  </video>
 </p>
 
 ---
